@@ -76,17 +76,16 @@ dotnet run
 
 ## Endpoints Disponibles
 
-- `GET /api/characters` - Obtener todos los personajes
-- `GET /api/characters/{id}` - Obtener un personaje por ID
-- `POST /api/characters` - Crear un nuevo personaje
-- `DELETE /api/characters/{id}` - Eliminar un personaje
+- `GET /api/character/GetCharacters` - Obtener todos los personajes desde SWAPI
+- `POST /api/character/SaveCharacter` - Añadir un personaje de la api a la base de datos
+- `DELETE /api/character/deleteCharacter/{id}` - Eliminar un personaje de la base de datos local
 
 Similar para:
-- `/api/films`
-- `/api/planets`
-- `/api/species`
-- `/api/starships`
-- `/api/vehicles`
+- `/api/film`
+- `/api/planet`
+- `/api/specie`
+- `/api/starship`
+- `/api/vehicle`
 
 ## Testing
 
