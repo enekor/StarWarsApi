@@ -25,10 +25,15 @@ namespace StarWarsApi.Daos
         {
             return _dbquery.Distinct().AsNoTracking().ToList();
         }
+        
+        public T? GetById(string id)
+        {
+            return _dbquery.AsNoTracking().FirstOrDefault(x => x.Uid == id);
+        }
 
         public T InsertOrUpdate(T obj)
         {
-            if(_dbquery.Where(x=> x.Uid == obj.Uid).Any())
+            if (_dbquery.Where(x => x.Uid == obj.Uid).Any())
             {
                 return _dbquery.Update(obj).Entity;
             }

@@ -5,6 +5,20 @@ namespace StarWarsApi.Mappers.FromApiToDatabase
 {
     public class ADFilmMapper
     {
+        private static ADFilmMapper instance;
+        private ADFilmMapper() { }
+
+        public static ADFilmMapper Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = new ADFilmMapper();
+                }
+                return instance;
+            }
+        }
         public Films MapToDatabase(FilmsApi acFilm)
         {
             if (acFilm == null)
@@ -24,6 +38,15 @@ namespace StarWarsApi.Mappers.FromApiToDatabase
                 Planets = acFilm.properties.planets != null ? string.Join(",", acFilm.properties.planets.Select(v => v.Split("/").Last())) : string.Empty,
                 Species = acFilm.properties.species != null ? string.Join(",", acFilm.properties.species.Select(v => v.Split("/").Last())) : string.Empty
             };
+        }
+
+        public List<Films> MapToDatabaseList(List<FilmsApi> acFilms)
+        {
+            if (acFilms == null || !acFilms.Any())
+            {
+                return new List<Films>();
+            }
+            return acFilms.Select(ac => MapToDatabase(ac)).ToList();
         }
     }
 }
