@@ -1,5 +1,6 @@
 using BDCADAO.BDModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using StarWarsApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,7 +12,7 @@ builder.Services.AddSwaggerGen();
 
 // Add DbContext configuration
 builder.Services.AddDbContext<ModelContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite("Data Source=StarWars.db"));
 
 // Configure HttpClient with base address
 builder.Services.AddHttpClient("StarWarsApi", client =>
