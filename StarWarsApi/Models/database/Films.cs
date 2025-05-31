@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace StarWarsApi.Models.database
 {
     [Table("films")]
-    public class Films:BaseModel
+    public class Films : BaseModel
     {
         [Column("title")]
         public string Title { get; set; }
@@ -26,6 +26,8 @@ namespace StarWarsApi.Models.database
         public string Planets { get; set; }
         [Column("species")]
         public string Species { get; set; }
+        [Column("url")]
+        public string Url { get; set; }
 
 
     }

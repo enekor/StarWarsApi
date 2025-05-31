@@ -27,14 +27,15 @@ namespace StarWarsApi.Mappers.FromControllerToDatabase
             return new Films
             {
                 Title = filmDto.Title,
-                Characters = filmDto.Characters,
-                Planets = filmDto.Planets,
-                Starships = filmDto.Starships,
-                Vehicles = filmDto.Vehicles,
-                Species = filmDto.Species,
+                Characters = string.Join(",",filmDto.Characters.Select(c => c.Url.Split("/").Last()).ToList()),
+                Planets = string.Join(",", filmDto.Planets.Select(p => p.url.Split("/").Last()).ToList()),
+                Starships = string.Join(",", filmDto.Starships.Select(s => s.Url.Split("/").Last()).ToList()),
+                Vehicles = string.Join(",", filmDto.Vehicles.Select(v => v.Url.Split("/").Last()).ToList()),
+                Species = string.Join(",", filmDto.Species.Select(s => s.Url.Split("/").Last()).ToList()),
                 Description = filmDto.Description,
                 Created = filmDto.Created,
-                Edited = filmDto.Edited
+                Edited = filmDto.Edited,
+                Url = filmDto.Url
 
             };
         }

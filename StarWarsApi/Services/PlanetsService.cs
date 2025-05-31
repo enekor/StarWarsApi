@@ -14,12 +14,8 @@ using StarWarsApi.Mappers.FromControllerToDatabase;
 namespace StarWarsApi.Services
 {
     public class PlanetsService : BaseService
-    {
-        private readonly HttpClient _httpClient;
-
-        public PlanetsService(HttpClient httpClient, ModelContext context) : base(context)
+    {        public PlanetsService(HttpClient httpClient, ModelContext context) : base(context, httpClient)
         {
-            _httpClient = httpClient;
         }
 
         public async Task<List<PlanetDto>> GetAllPlanetsAsync()
@@ -31,20 +27,36 @@ namespace StarWarsApi.Services
             var planets = JsonSerializer.Deserialize<List<PlanetApi>>(content);
             
             return planets.Select(p => ACPlanetMapper.Instance.MapToController(p)).ToList();
-        }
-
-        public async Task<PlanetDto> GetPlanetByIdAsync(string id)
+        }        public async Task<PlanetDto?> GetPlanetByIdAsync(string id)
         {
-            var data = _context.Planets.GetById(id);
-            if (data != null)
+            PlanetDto? planetDto = null;
+            try
             {
-                return DCPlanetMapper.Instance.ToDto(data);
+                var response = await _httpClient.GetAsync($"{_connectionString}/planets/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var planetApi = JsonSerializer.Deserialize<PlanetApi>(content);
+                    if (planetApi != null)
+                    {
+                        planetDto = ACPlanetMapper.Instance.MapToController(planetApi);
+                    }
+                }
             }
-
-            return null;
-        }
-
-        public async void SavePlanetAsync(PlanetDto planetDto)
+            catch (Exception e)
+            {
+                Console.WriteLine($"error al obtener el planeta con id {id}: {e.Message}");
+            }
+            
+            if (planetDto == null)
+            {
+                // Si no se encuentra en la API o hay error, intentar obtener de la base de datos
+                var data = _context.Planets.GetById(id);
+                planetDto = data != null ? DCPlanetMapper.Instance.ToDto(data) : null;
+            }
+            
+            return planetDto;
+        }        public async Task SavePlanetAsync(PlanetDto planetDto)
         {
             var planet = CDPlanetMapper.Instance.ToEntity(planetDto);
             _context.Planets.InsertOrUpdate(planet);
@@ -56,6 +68,12 @@ namespace StarWarsApi.Services
             int deleted = _context.Planets.Delete(id);
 
             return deleted > 0;
+        }
+
+        public PlanetDto GetPlanetFromDB(string id)
+        {
+            var planet = _context.Planets.GetById(id);
+            return planet != null ? DCPlanetMapper.Instance.ToDto(planet) : null;
         }
     }
 }

@@ -8,7 +8,6 @@ namespace StarWarsApi.Controllers
 {
     public class CharacterController : ControllerBase
     {
-        private readonly ModelContext _context;
         public CharacterController()
         {
 
@@ -28,11 +27,19 @@ namespace StarWarsApi.Controllers
             return Ok(characters);
         }
 
-        [HttpPost("/[controller]/SaveCharacter")]
+        [HttpPost("/[controller]/SaveCharacterToDatabase")]
         public async Task<ActionResult<Character>> CreateCharacter([FromBody] CharacterDto character)
         {
             _characterService.SaveCharacterAsync(character);
             return CreatedAtAction("Insert character",character);
+        }
+
+        [HttpGet("/[controller]/GetCharactersFromDatabase/{id}")]
+        public async Task<ActionResult<List<Character>>> GetCharactersFromDatabase(string id)
+        {
+            var characters = _characterService.GetCharactersFromDB();
+
+            return Ok(characters);
         }
 
         [HttpDelete("/[controller]/DeleteCharacter/{id}")]

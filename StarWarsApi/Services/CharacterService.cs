@@ -14,11 +14,9 @@ namespace StarWarsApi.Services
 {
     public class CharacterService : BaseService
     {
-        private readonly HttpClient _httpClient;
 
-        public CharacterService(HttpClient httpClient, ModelContext context) : base(context)
+        public CharacterService(HttpClient httpClient, ModelContext context) : base(context,httpClient)
         {
-            _httpClient = httpClient;
         }
 
         public async Task<List<CharacterDto>> GetAllCharactersAsync()
@@ -31,19 +29,35 @@ namespace StarWarsApi.Services
             
             return characters.Select(c => ACCharacterMapper.Instance.MapToController(c)).ToList();
         }
-
-        public async Task<CharacterDto> GetCharacterByIdAsync(string id)
+        public async Task<CharacterDto?> GetCharacterByIdAsync(string id)
         {
-            var data = _context.Characters.GetById(id);
-            if (data != null)
+            CharacterDto? characterDto = null;
+            try
             {
-                return DCCharacterMapper.Instance.ToDto(data);
-            }
+                var response = await _httpClient.GetAsync($"{_connectionString}/people/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var characterApi = JsonSerializer.Deserialize<CharacterApi>(content);
 
-            return null;
+                    characterDto = ACCharacterMapper.Instance.MapToController(characterApi);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"error al obtener el personaje con id {id}: {e.Message}");
+            }
+            
+            return characterDto;
         }
 
-        public async void SaveCharacterAsync(CharacterDto characterDto)
+        public List<CharacterDto> GetCharactersFromDB()
+        {
+            var characters = _context.Characters.GetAll();
+            return DCCharacterMapper.Instance.ToDtoList(characters);
+        }
+
+        public async Task SaveCharacterAsync(CharacterDto characterDto)
         {
             var character = CDCharacterMapper.Instance.ToEntity(characterDto);
             _context.Characters.InsertOrUpdate(character);
@@ -52,9 +66,15 @@ namespace StarWarsApi.Services
 
         public async Task<bool> DeleteCharacterAsync(string id)
         {
-            int deleted = _context.Characters.Delete(id);
-
+            var deleted = _context.Characters.Delete(id);
+            await _context.SaveChangesAsync();
             return deleted > 0;
+        }
+
+        public CharacterDto GetCharacterFromDB(string id)
+        {
+            var character = _context.Characters.GetById(id);
+            return DCCharacterMapper.Instance.ToDto(character);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace StarWarsApi.Mappers.FromDatabaseToController
             }
         }
         
-        public  FilmsDto ToDto(Films film)
+        public  FilmsDto ToDto(Films film, List<StarshipDto> starships, List<CharacterDto> characters, List<VehicleDto> vehicles, List<PlanetDto> planets, List<SpeciesDto> species)
         {
             if (film == null)
                 return null;
@@ -29,23 +29,16 @@ namespace StarWarsApi.Mappers.FromDatabaseToController
             return new FilmsDto
             {
                 Title = film.Title,
-                Characters = film.Characters,
-                Planets = film.Planets,
-                Species = film.Species,
-                Starships = film.Starships,
-                Vehicles = film.Vehicles,
+                Characters = characters,
+                Planets = planets,
+                Species = species,
+                Starships = starships,
+                Vehicles = vehicles,
                 Description = film.Description,
                 Created = film.Created,
                 Edited = film.Edited,
+                Url = film.Url
             };
-        }
-
-        public  List<FilmsDto> ToDtoList(List<Films> films)
-        {
-            if (films == null || !films.Any())
-                return new List<FilmsDto>();
-
-            return films.Select(f => ToDto(f)).ToList();
         }
     }
 }

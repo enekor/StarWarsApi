@@ -15,11 +15,9 @@ namespace StarWarsApi.Services
 {
     public class VehicleService : BaseService
     {
-        private readonly HttpClient _httpClient;
 
-        public VehicleService(HttpClient httpClient, ModelContext context) : base(context)
+        public VehicleService(HttpClient httpClient, ModelContext context) : base(context,httpClient)
         {
-            _httpClient = httpClient;
         }
 
         public async Task<List<VehicleDto>> GetAllVehiclesAsync()
@@ -35,13 +33,26 @@ namespace StarWarsApi.Services
 
         public async Task<VehicleDto> GetVehicleByIdAsync(string id)
         {
-            var data = _context.Vehicles.GetById(id);
-            if (data != null)
+            VehicleDto? vehicleDto = null;
+            try
             {
-                return DCVehicleMapper.Instance.ToDto(data);
+                var response = await _httpClient.GetAsync($"{_connectionString}/vehicles/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var vehicleApi = JsonSerializer.Deserialize<VehicleApi>(content);
+                    if (vehicleApi != null)
+                    {
+                        vehicleDto = ACVehicleMapper.Instance.MapToController(vehicleApi);// Guardamos en BD para futuras consultas
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"error al obtener el vehículo con id {id}: {e.Message}");
             }
 
-            return null;
+            return vehicleDto;
         }
 
         public async void SaveVehicleAsync(VehicleDto vehicleDto)
@@ -56,6 +67,12 @@ namespace StarWarsApi.Services
             int deleted = _context.Vehicles.Delete(id);
 
             return deleted > 0;
+        }
+
+        public VehicleDto GetVehicleFromDB(string id)
+        {
+            var vehicle = _context.Vehicles.GetById(id);
+            return vehicle != null ? DCVehicleMapper.Instance.ToDto(vehicle) : null;
         }
     }
 }

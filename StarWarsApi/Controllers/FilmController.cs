@@ -35,5 +35,12 @@ namespace StarWarsApi.Controllers
             await _filmService.DeleteFilmAsync(id);
             return NoContent();
         }
+
+        [HttpGet("/[controller]/GetFilmsFromDatabase")]
+        public ActionResult<List<Films>> GetFilmsFromDatabase()
+        {
+            var films = _filmService.GetFilmsFromDB();
+            return Ok(films);
+        }
     }
 }

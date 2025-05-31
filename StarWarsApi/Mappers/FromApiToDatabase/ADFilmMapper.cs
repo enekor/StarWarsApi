@@ -36,7 +36,8 @@ namespace StarWarsApi.Mappers.FromApiToDatabase
                 Vehicles = acFilm.properties.vehicles != null ? string.Join(",", acFilm.properties.vehicles.Select(v => v.Split("/").Last())) : string.Empty,
                 Characters = acFilm.properties.characters != null ? string.Join(",", acFilm.properties.characters.Select(v => v.Split("/").Last())) : string.Empty,
                 Planets = acFilm.properties.planets != null ? string.Join(",", acFilm.properties.planets.Select(v => v.Split("/").Last())) : string.Empty,
-                Species = acFilm.properties.species != null ? string.Join(",", acFilm.properties.species.Select(v => v.Split("/").Last())) : string.Empty
+                Species = acFilm.properties.species != null ? string.Join(",", acFilm.properties.species.Select(v => v.Split("/").Last())) : string.Empty,
+                Url = acFilm.properties.url
             };
         }
 
