@@ -75,6 +75,10 @@ namespace StarWarsApi.Services
             var planet = CDPlanetMapper.Instance.ToEntity(planetDto);
             if (planet != null)
             {
+                if (string.IsNullOrEmpty(planet.Uid))
+                {
+                    planet.Uid = planetDto.Url?.Split('/').Last() ?? Guid.NewGuid().ToString();
+                }
                 _context.Planets.InsertOrUpdate(planet);
                 await _context.SaveChangesAsync();
             }

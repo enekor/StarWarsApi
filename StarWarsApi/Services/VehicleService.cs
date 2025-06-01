@@ -76,6 +76,10 @@ namespace StarWarsApi.Services
             var vehicle = CDVehicleMapper.Instance.ToEntity(vehicleDto);
             if (vehicle != null)
             {
+                if (string.IsNullOrEmpty(vehicle.Uid))
+                {
+                    vehicle.Uid = vehicleDto.Url?.Split('/').Last() ?? Guid.NewGuid().ToString();
+                }
                 _context.Vehicles.InsertOrUpdate(vehicle);
                 await _context.SaveChangesAsync();
             }

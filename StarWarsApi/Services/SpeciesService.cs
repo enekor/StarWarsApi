@@ -76,6 +76,10 @@ namespace StarWarsApi.Services
             var species = CDSpecieMapper.Instance.ToEntity(speciesDto);
             if (species != null)
             {
+                if (string.IsNullOrEmpty(species.Uid))
+                {
+                    species.Uid = speciesDto.Url?.Split('/').Last() ?? Guid.NewGuid().ToString();
+                }
                 _context.Species.InsertOrUpdate(species);
                 await _context.SaveChangesAsync();
             }

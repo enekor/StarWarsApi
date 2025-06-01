@@ -130,37 +130,90 @@ namespace StarWarsApi.Services
 
         public async Task SaveFilmAsync(FilmsDto filmDto)
         {
-            var film = CDFilmMapper.Instance.ToEntity(filmDto);
-
-            foreach(var character in filmDto.Characters ?? new List<CharacterDto>())
+            try 
             {
-                _characterService.SaveCharacterAsync(character);
-            }
+                var film = CDFilmMapper.Instance.ToEntity(filmDto);
+                if (film == null) return;
 
-            foreach (var vehicle in filmDto.Vehicles ?? new List<VehicleDto>())
-            {
-                _vehicleService.SaveVehicleAsync(vehicle);
-            }
+                // Asignar un ID si no tiene uno
+                if (string.IsNullOrEmpty(film.Uid))
+                {
+                    film.Uid = filmDto.Url?.Split('/').Last() ?? Guid.NewGuid().ToString();
+                }
 
-            foreach (var starship in filmDto.Starships ?? new List<StarshipDto>())
-            {
-                _starshipService.SaveStarshipAsync(starship);
-            }
+                // Guardar entidades relacionadas
+                if (filmDto.Characters?.Any() == true)
+                {
+                    foreach(var character in filmDto.Characters)
+                    {
+                        if (string.IsNullOrEmpty(character.Url))
+                        {
+                            character.Url = $"https://swapi.dev/api/people/{Guid.NewGuid()}";
+                        }
+                        await _characterService.SaveCharacterAsync(character);
+                    }
+                    film.Characters = string.Join(",", filmDto.Characters.Select(c => c.Url?.Split('/').Last()));
+                }
 
-            foreach (var planet in filmDto.Planets)
-            {
-                _planetService.SavePlanetAsync(planet);
-            }
+                if (filmDto.Vehicles?.Any() == true)
+                {
+                    foreach (var vehicle in filmDto.Vehicles)
+                    {
+                        if (string.IsNullOrEmpty(vehicle.Url))
+                        {
+                            vehicle.Url = $"https://swapi.dev/api/vehicles/{Guid.NewGuid()}";
+                        }
+                        await _vehicleService.SaveVehicleAsync(vehicle);
+                    }
+                    film.Vehicles = string.Join(",", filmDto.Vehicles.Select(v => v.Url?.Split('/').Last()));
+                }
 
-            foreach (var species in filmDto.Species ?? new List<SpeciesDto>())
-            {
-                _speciesService.SaveSpeciesAsync(species);
-            }
+                if (filmDto.Starships?.Any() == true)
+                {
+                    foreach (var starship in filmDto.Starships)
+                    {
+                        if (string.IsNullOrEmpty(starship.Url))
+                        {
+                            starship.Url = $"https://swapi.dev/api/starships/{Guid.NewGuid()}";
+                        }
+                        await _starshipService.SaveStarshipAsync(starship);
+                    }
+                    film.Starships = string.Join(",", filmDto.Starships.Select(s => s.Url?.Split('/').Last()));
+                }
 
-            if (film != null)
-            {
+                if (filmDto.Planets?.Any() == true)
+                {
+                    foreach (var planet in filmDto.Planets)
+                    {
+                        if (string.IsNullOrEmpty(planet.Url))
+                        {
+                            planet.Url = $"https://swapi.dev/api/planets/{Guid.NewGuid()}";
+                        }
+                        await _planetService.SavePlanetAsync(planet);
+                    }
+                    film.Planets = string.Join(",", filmDto.Planets.Select(p => p.Url?.Split('/').Last()));
+                }
+
+                if (filmDto.Species?.Any() == true)
+                {
+                    foreach (var species in filmDto.Species)
+                    {
+                        if (string.IsNullOrEmpty(species.Url))
+                        {
+                            species.Url = $"https://swapi.dev/api/species/{Guid.NewGuid()}";
+                        }
+                        await _speciesService.SaveSpeciesAsync(species);
+                    }
+                    film.Species = string.Join(",", filmDto.Species.Select(s => s.Url?.Split('/').Last()));
+                }
+
                 _context.Films.InsertOrUpdate(film);
                 await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al guardar la película: {ex.Message}");
+                throw;
             }
         }
 

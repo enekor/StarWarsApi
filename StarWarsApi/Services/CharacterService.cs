@@ -76,6 +76,10 @@ namespace StarWarsApi.Services
             var character = CDCharacterMapper.Instance.ToEntity(characterDto);
             if (character != null)
             {
+                if (string.IsNullOrEmpty(character.Uid))
+                {
+                    character.Uid = characterDto.Url?.Split('/').Last() ?? Guid.NewGuid().ToString();
+                }
                 _context.Characters.InsertOrUpdate(character);
                 await _context.SaveChangesAsync();
             }

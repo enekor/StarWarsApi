@@ -76,6 +76,10 @@ namespace StarWarsApi.Services
             var starship = CDStarshipMapper.Instance.ToEntity(starshipDto);
             if (starship != null)
             {
+                if (string.IsNullOrEmpty(starship.Uid))
+                {
+                    starship.Uid = starshipDto.Url?.Split('/').Last() ?? Guid.NewGuid().ToString();
+                }
                 _context.Starships.InsertOrUpdate(starship);
                 await _context.SaveChangesAsync();
             }
