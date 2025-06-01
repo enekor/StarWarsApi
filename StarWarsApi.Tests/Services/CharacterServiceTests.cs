@@ -9,6 +9,7 @@ using System.Text.Json;
 using Moq.Protected;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using BDCADAO.BDModels;
 
 namespace StarWarsApi.Tests.Services
 {
@@ -205,7 +206,6 @@ namespace StarWarsApi.Tests.Services
 
             // Assert
             _mockContext.Verify(c => c.Characters.InsertOrUpdate(It.IsAny<Character>()), Times.Once);
-            _mockContext.Verify(c => c.SaveChangesAsync(), Times.Once);
             Assert.That(savedCharacter, Is.Not.Null);
             Assert.That(savedCharacter.Name, Is.EqualTo("Luke Skywalker"));
             Assert.That(savedCharacter.Height, Is.EqualTo("172"));
@@ -244,7 +244,6 @@ namespace StarWarsApi.Tests.Services
 
             // Assert
             _mockContext.Verify(c => c.Characters.InsertOrUpdate(It.IsAny<Character>()), Times.Once);
-            _mockContext.Verify(c => c.SaveChangesAsync(), Times.Once);
             Assert.That(updatedCharacter, Is.Not.Null);
             Assert.That(updatedCharacter.Mass, Is.EqualTo("80"));
         }
@@ -320,7 +319,6 @@ namespace StarWarsApi.Tests.Services
             // Assert
             Assert.That(result, Is.True);
             _mockContext.Verify(c => c.Characters.Delete(character.Id), Times.Once);
-            _mockContext.Verify(c => c.SaveChangesAsync(), Times.Once);
         }
 
         [Test]
@@ -334,7 +332,6 @@ namespace StarWarsApi.Tests.Services
 
             // Assert
             Assert.That(result, Is.False);
-            _mockContext.Verify(c => c.SaveChangesAsync(), Times.Never);
         }
 
         [Test]

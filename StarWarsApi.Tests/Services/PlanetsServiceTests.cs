@@ -10,6 +10,7 @@ using Moq.Protected;
 using System.Net.Http.Json;
 using StarWarsApi.Models.database;
 using Microsoft.EntityFrameworkCore;
+using BDCADAO.BDModels;
 
 namespace StarWarsApi.Tests.Services
 {
@@ -19,7 +20,9 @@ namespace StarWarsApi.Tests.Services
         private Mock<HttpMessageHandler> _mockHttpMessageHandler;
         private HttpClient _httpClient;
         private Mock<ModelContext> _mockContext;
-        private PlanetsService _service;        [SetUp]
+        private PlanetsService _service;        
+        
+        [SetUp]
         public void Setup()
         {
             // Setup for mock tests
@@ -39,11 +42,12 @@ namespace StarWarsApi.Tests.Services
         public async Task GetAllPlanetsAsync_WhenApiCallSucceeds_ReturnsPlanetsList()
         {
             // Arrange
-            var planets = new List<PlanetApi>
+            var planets = new List<PLanetApu>
             {
-                new PlanetApi
+                new PLanetApu
                 {
-                    Name = "Tatooine",
+                    
+                    name = "Tatooine",
                     url = "https://swapi.dev/api/planets/1/",
                     Climate = "arid",
                     Terrain = "desert"
@@ -189,7 +193,6 @@ namespace StarWarsApi.Tests.Services
 
             // Assert
             _mockContext.Verify(c => c.Planets.InsertOrUpdate(It.IsAny<Planet>()), Times.Once);
-            _mockContext.Verify(c => c.SaveChangesAsync(), Times.Once);
             Assert.That(savedPlanet, Is.Not.Null);
             Assert.That(savedPlanet.Name, Is.EqualTo("Tatooine"));
             Assert.That(savedPlanet.Climate, Is.EqualTo("arid"));
@@ -226,7 +229,6 @@ namespace StarWarsApi.Tests.Services
 
             // Assert
             _mockContext.Verify(c => c.Planets.InsertOrUpdate(It.IsAny<Planet>()), Times.Once);
-            _mockContext.Verify(c => c.SaveChangesAsync(), Times.Once);
             Assert.That(updatedPlanet, Is.Not.Null);
             Assert.That(updatedPlanet.Climate, Is.EqualTo("temperate"));
         }

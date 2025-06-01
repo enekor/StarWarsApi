@@ -9,6 +9,7 @@ using System.Text.Json;
 using Moq.Protected;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using BDCADAO.BDModels;
 
 namespace StarWarsApi.Tests.Services
 {

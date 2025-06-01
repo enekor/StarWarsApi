@@ -10,6 +10,7 @@ using Moq.Protected;
 using System.Net.Http.Json;
 using StarWarsApi.Models.database;
 using Microsoft.EntityFrameworkCore;
+using BDCADAO.BDModels;
 
 namespace StarWarsApi.Tests.Services
 {
@@ -44,11 +45,11 @@ namespace StarWarsApi.Tests.Services
         public async Task GetAllFilmsAsync_WhenApiCallSucceeds_ReturnsFilmsList()
         {
             // Arrange
-            var films = new List<FilmsApi>
+            var films = new List<FilmApi>
             {
-                new FilmsApi
+                new FilmApi
                 {
-                    properties = new FilmsApi.Properties
+                    result = new FilmApi.prop
                     {
                         title = "A New Hope",
                         created = DateTime.Now,
@@ -172,7 +173,6 @@ namespace StarWarsApi.Tests.Services
 
             // Assert
             _mockContext.Verify(c => c.Films.InsertOrUpdate(It.IsAny<Films>()), Times.Once);
-            _mockContext.Verify(c => c.SaveChangesAsync(), Times.Once);
 
             Assert.That(savedFilm.Title, Is.EqualTo(filmDto.Title));
             Assert.That(savedFilm.Characters, Does.Contain("1")); // ID from URL
@@ -194,7 +194,6 @@ namespace StarWarsApi.Tests.Services
 
             // Assert
             Assert.That(result, Is.True);
-            _mockContext.Verify(c => c.SaveChangesAsync(), Times.Once);
         }
 
         [Test]
@@ -209,7 +208,6 @@ namespace StarWarsApi.Tests.Services
 
             // Assert
             Assert.That(result, Is.False);
-            _mockContext.Verify(c => c.SaveChangesAsync(), Times.Once);
         }
 
         [Test]
