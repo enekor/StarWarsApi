@@ -1,9 +1,9 @@
 using NUnit.Framework;
-using StarWarsApi.Mappers.FromControllerToDatabase;
 using StarWarsApi.Models.controller;
 using StarWarsApi.Models.database;
+using StarWarsApi.Mappers.FromControllerToDatabase;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace StarWarsApi.Tests.Mappers.FromControllerToDatabase
 {
@@ -19,114 +19,167 @@ namespace StarWarsApi.Tests.Mappers.FromControllerToDatabase
         }
 
         [Test]
-        public void ToEntity_WhenDtoIsNull_ReturnsNull()
+        public void Instance_ShouldReturnSameInstance()
+        {
+            // Arrange & Act
+            var instance1 = CDFilmMapper.Instance;
+            var instance2 = CDFilmMapper.Instance;
+
+            // Assert
+            Assert.That(instance2, Is.EqualTo(instance1));
+            Assert.That(instance2, Is.SameAs(instance1));
+        }
+
+        [Test]
+        public void ToEntity_WithNullInput_ReturnsNull()
         {
             // Arrange
-            FilmsDto? dto = null;
+            FilmsDto? nullFilm = null;
 
             // Act
-            var result = _mapper.ToEntity(dto);
+            var result = _mapper.ToEntity(nullFilm);
 
             // Assert
             Assert.That(result, Is.Null);
         }
 
         [Test]
-        public void ToEntity_WhenDtoIsValid_ReturnsCorrectEntity()
+        public void ToEntity_WithValidInput_ReturnsCorrectMapping()
         {
             // Arrange
-            var now = DateTime.Now;
-            var dto = new FilmsDto
+            var created = DateTime.Now;
+            var edited = DateTime.Now.AddDays(1);
+
+            var filmDto = new FilmsDto
             {
+                Description = "Test Description",
+                Created = created,
+                Edited = edited,
+                Producer = "George Lucas",
                 Title = "A New Hope",
-                Characters = "1,2",
-                Planets = "1,2",
-                Starships = "1,2",
-                Vehicles = "1,2",
-                Species = "1,2",
-                Description = "The first Star Wars film",
-                Created = now,
-                Edited = now
+                EpisodeId = 4,
+                Director = "George Lucas",
+                ReleaseDate = "1977-05-25",
+                OpeningCrawl = "It is a period of civil war...",
+                Url = "https://swapi.dev/api/films/1",
+                Characters = new List<CharacterDto>
+                {
+                    new CharacterDto { Url = "https://swapi.dev/api/people/1" },
+                    new CharacterDto { Url = "https://swapi.dev/api/people/2" }
+                },
+                Planets = new List<PlanetDto>
+                {
+                    new PlanetDto { Url = "https://swapi.dev/api/planets/1" },
+                    new PlanetDto { Url = "https://swapi.dev/api/planets/2" }
+                },
+                Starships = new List<StarshipDto>
+                {
+                    new StarshipDto { Url = "https://swapi.dev/api/starships/2" },
+                    new StarshipDto { Url = "https://swapi.dev/api/starships/3" }
+                },
+                Vehicles = new List<VehicleDto>
+                {
+                    new VehicleDto { Url = "https://swapi.dev/api/vehicles/4" },
+                    new VehicleDto { Url = "https://swapi.dev/api/vehicles/6" }
+                },
+                Species = new List<SpeciesDto>
+                {
+                    new SpeciesDto { Url = "https://swapi.dev/api/species/1" },
+                    new SpeciesDto { Url = "https://swapi.dev/api/species/2" }
+                }
             };
 
             // Act
-            var result = _mapper.ToEntity(dto);
+            var result = _mapper.ToEntity(filmDto);
 
             // Assert
             Assert.That(result, Is.Not.Null);
-            Assert.That(result.Title, Is.EqualTo(dto.Title));
-            Assert.That(result.Characters, Is.EqualTo(dto.Characters));
-            Assert.That(result.Planets, Is.EqualTo(dto.Planets));
-            Assert.That(result.Starships, Is.EqualTo(dto.Starships));
-            Assert.That(result.Vehicles, Is.EqualTo(dto.Vehicles));
-            Assert.That(result.Species, Is.EqualTo(dto.Species));
-            Assert.That(result.Description, Is.EqualTo(dto.Description));
-            Assert.That(result.Created, Is.EqualTo(dto.Created));
-            Assert.That(result.Edited, Is.EqualTo(dto.Edited));
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Description, Is.EqualTo("Test Description"));
+                Assert.That(result.Created, Is.EqualTo(created));
+                Assert.That(result.Edited, Is.EqualTo(edited));
+                Assert.That(result.Producer, Is.EqualTo("George Lucas"));
+                Assert.That(result.Title, Is.EqualTo("A New Hope"));
+                Assert.That(result.EpisodeId, Is.EqualTo(4));
+                Assert.That(result.Director, Is.EqualTo("George Lucas"));
+                Assert.That(result.ReleaseDate, Is.EqualTo("1977-05-25"));
+                Assert.That(result.OpeningCrawl, Is.EqualTo("It is a period of civil war..."));
+                Assert.That(result.Url, Is.EqualTo("https://swapi.dev/api/films/1"));
+                Assert.That(result.Characters, Is.EqualTo("1,2"));
+                Assert.That(result.Planets, Is.EqualTo("1,2"));
+                Assert.That(result.Starships, Is.EqualTo("2,3"));
+                Assert.That(result.Vehicles, Is.EqualTo("4,6"));
+                Assert.That(result.Species, Is.EqualTo("1,2"));
+            });
         }
 
         [Test]
-        public void ToEntity_WhenDtoHasNullCollections_ReturnsEntityWithNullCollections()
+        public void ToEntity_WithNullCollections_ReturnsNullForRelatedFields()
         {
             // Arrange
-            var dto = new FilmsDto
+            var filmDto = new FilmsDto
             {
                 Title = "A New Hope",
                 Characters = null,
                 Planets = null,
                 Starships = null,
                 Vehicles = null,
-                Species = null,
-                Description = "The first Star Wars film"
+                Species = null
             };
 
             // Act
-            var result = _mapper.ToEntity(dto);
+            var result = _mapper.ToEntity(filmDto);
 
             // Assert
             Assert.That(result, Is.Not.Null);
-            Assert.That(result.Characters, Is.Null);
-            Assert.That(result.Planets, Is.Null);
-            Assert.That(result.Starships, Is.Null);
-            Assert.That(result.Vehicles, Is.Null);
-            Assert.That(result.Species, Is.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Characters, Is.Null);
+                Assert.That(result.Planets, Is.Null);
+                Assert.That(result.Starships, Is.Null);
+                Assert.That(result.Vehicles, Is.Null);
+                Assert.That(result.Species, Is.Null);
+            });
         }
 
         [Test]
-        public void ToEntity_WhenDtoHasEmptyCollections_ReturnsEntityWithEmptyCollections()
+        public void ToEntity_WithEmptyCollections_ReturnsNullForRelatedFields()
         {
             // Arrange
-            var dto = new FilmsDto
+            var filmDto = new FilmsDto
             {
                 Title = "A New Hope",
-                Characters = string.Empty,
-                Planets = string.Empty,
-                Starships = string.Empty,
-                Vehicles = string.Empty,
-                Species = string.Empty,
-                Description = "The first Star Wars film"
+                Characters = new List<CharacterDto>(),
+                Planets = new List<PlanetDto>(),
+                Starships = new List<StarshipDto>(),
+                Vehicles = new List<VehicleDto>(),
+                Species = new List<SpeciesDto>()
             };
 
             // Act
-            var result = _mapper.ToEntity(dto);
+            var result = _mapper.ToEntity(filmDto);
 
             // Assert
             Assert.That(result, Is.Not.Null);
-            Assert.That(result.Characters, Is.Empty);
-            Assert.That(result.Planets, Is.Empty);
-            Assert.That(result.Starships, Is.Empty);
-            Assert.That(result.Vehicles, Is.Empty);
-            Assert.That(result.Species, Is.Empty);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Characters, Is.Null);
+                Assert.That(result.Planets, Is.Null);
+                Assert.That(result.Starships, Is.Null);
+                Assert.That(result.Vehicles, Is.Null);
+                Assert.That(result.Species, Is.Null);
+            });
         }
 
         [Test]
-        public void ToEntityList_WhenListIsNull_ReturnsEmptyList()
+        public void ToEntityList_WithNullInput_ReturnsEmptyList()
         {
             // Arrange
-            List<FilmsDto>? dtos = null;
+            List<FilmsDto>? nullList = null;
 
             // Act
-            var result = _mapper.ToEntityList(dtos);
+            var result = _mapper.ToEntityList(nullList);
 
             // Assert
             Assert.That(result, Is.Not.Null);
@@ -134,13 +187,13 @@ namespace StarWarsApi.Tests.Mappers.FromControllerToDatabase
         }
 
         [Test]
-        public void ToEntityList_WhenListIsEmpty_ReturnsEmptyList()
+        public void ToEntityList_WithEmptyList_ReturnsEmptyList()
         {
             // Arrange
-            var dtos = new List<FilmsDto>();
+            var emptyList = new List<FilmsDto>();
 
             // Act
-            var result = _mapper.ToEntityList(dtos);
+            var result = _mapper.ToEntityList(emptyList);
 
             // Assert
             Assert.That(result, Is.Not.Null);
@@ -148,45 +201,46 @@ namespace StarWarsApi.Tests.Mappers.FromControllerToDatabase
         }
 
         [Test]
-        public void ToEntityList_WhenListHasItems_ReturnsCorrectEntities()
+        public void ToEntityList_WithValidInput_ReturnsCorrectMapping()
         {
             // Arrange
-            var now = DateTime.Now;
-            var dtos = new List<FilmsDto>
+            var films = new List<FilmsDto>
             {
                 new FilmsDto
                 {
                     Title = "A New Hope",
-                    Description = "The first Star Wars film",
-                    Created = now,
-                    Edited = now,
-                    Url = "https://swapi.dev/api/films/1/"
+                    EpisodeId = 4,
+                    Characters = new List<CharacterDto>
+                    {
+                        new CharacterDto { Url = "https://swapi.dev/api/people/1" }
+                    }
                 },
                 new FilmsDto
                 {
                     Title = "The Empire Strikes Back",
-                    Description = "The second Star Wars film",
-                    Created = now,
-                    Edited = now,
-                    Url = "https://swapi.dev/api/films/2/"
+                    EpisodeId = 5,
+                    Characters = new List<CharacterDto>
+                    {
+                        new CharacterDto { Url = "https://swapi.dev/api/people/2" }
+                    }
                 }
             };
 
             // Act
-            var result = _mapper.ToEntityList(dtos);
+            var result = _mapper.ToEntityList(films);
 
             // Assert
+            Assert.That(result, Is.Not.Null);
             Assert.That(result, Has.Count.EqualTo(2));
-            Assert.That(result[0].Title, Is.EqualTo("A New Hope"));
-            Assert.That(result[1].Title, Is.EqualTo("The Empire Strikes Back"));
-            Assert.That(result[0].Description, Is.EqualTo("The first Star Wars film"));
-            Assert.That(result[1].Description, Is.EqualTo("The second Star Wars film"));
-            Assert.That(result[0].Created, Is.EqualTo(now));
-            Assert.That(result[1].Created, Is.EqualTo(now));
-            Assert.That(result[0].Edited, Is.EqualTo(now));
-            Assert.That(result[1].Edited, Is.EqualTo(now));
-            Assert.That(result[0].Url, Is.EqualTo("https://swapi.dev/api/films/1/"));
-            Assert.That(result[1].Url, Is.EqualTo("https://swapi.dev/api/films/2/"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(result[0].Title, Is.EqualTo("A New Hope"));
+                Assert.That(result[0].EpisodeId, Is.EqualTo(4));
+                Assert.That(result[0].Characters, Is.EqualTo("1"));
+                Assert.That(result[1].Title, Is.EqualTo("The Empire Strikes Back"));
+                Assert.That(result[1].EpisodeId, Is.EqualTo(5));
+                Assert.That(result[1].Characters, Is.EqualTo("2"));
+            });
         }
     }
 }
