@@ -77,22 +77,41 @@ namespace StarWarsApi.Tests.Services
             Assert.That(result.Count, Is.EqualTo(2));
             Assert.That(result[0].Name, Is.EqualTo("Snowspeeder"));
             Assert.That(result[1].Name, Is.EqualTo("AT-AT"));
-        }
-
-        [Test]
+        }        [Test]
         public async Task GetVehicleByIdAsync_ExistingId_ReturnsVehicle()
         {
             // Arrange
-            var vehicle = new Vehicle { Name = "Snowspeeder", Model = "T-47 airspeeder" };
-            await _context.Vehicles.AddAsync(vehicle);
-            await _context.SaveChangesAsync();
+            var vehicleId = "14";
+            var mockResponse = new VehicleApi 
+            {
+                Name = "Snowspeeder",
+                Model = "t-47 airspeeder",
+                url = $"https://swapi.dev/api/vehicles/{vehicleId}"
+            };
+
+            var response = new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = JsonContent.Create(mockResponse)
+            };
+
+            _mockHttpHandler
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ReturnsAsync(response);
 
             // Act
-            var result = await _service.GetVehicleByIdAsync(vehicle.Id);
+            var result = await _service.GetVehicleByIdAsync(vehicleId);
 
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Name, Is.EqualTo("Snowspeeder"));
+            Assert.That(result.Model, Is.EqualTo("t-47 airspeeder"));
+            Assert.That(result.Url, Is.EqualTo($"https://swapi.dev/api/vehicles/{vehicleId}"));
         }
 
         [Test]
@@ -103,13 +122,16 @@ namespace StarWarsApi.Tests.Services
 
             // Assert
             Assert.That(result, Is.Null);
-        }
-
-        [Test]
-        public async Task SaveVehicleAsync_SavesToDatabase()
+        }        [Test]
+        public async Task SaveVehicleAsync_NewVehicle_SavesToDatabase()
         {
             // Arrange
-            var vehicleDto = new VehicleDto { Name = "Snowspeeder", Model = "T-47 airspeeder" };
+            var vehicleDto = new VehicleDto
+            {
+                Name = "Snowspeeder",
+                Model = "t-47 airspeeder",
+                Url = "https://swapi.dev/api/vehicles/14/"
+            };
 
             // Act
             await _service.SaveVehicleAsync(vehicleDto);
@@ -117,7 +139,32 @@ namespace StarWarsApi.Tests.Services
             // Assert
             var savedVehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.Name == "Snowspeeder");
             Assert.That(savedVehicle, Is.Not.Null);
-            Assert.That(savedVehicle.Model, Is.EqualTo("T-47 airspeeder"));
+            Assert.That(savedVehicle.Model, Is.EqualTo("t-47 airspeeder"));
+            Assert.That(savedVehicle.Uid, Is.EqualTo("14")); // ID from URL
+        }
+
+        [Test]
+        public async Task SaveVehicleAsync_ExistingVehicle_UpdatesDatabase()
+        {
+            // Arrange
+            var vehicle = new Vehicle { Name = "Snowspeeder", Model = "t-47 airspeeder" };
+            await _context.Vehicles.AddAsync(vehicle);
+            await _context.SaveChangesAsync();
+
+            var vehicleDto = new VehicleDto
+            {
+                Name = "Snowspeeder",
+                Model = "t-48 airspeeder", // Updated model
+                Url = $"https://swapi.dev/api/vehicles/{vehicle.Uid}"
+            };
+
+            // Act
+            await _service.SaveVehicleAsync(vehicleDto);
+
+            // Assert
+            var updatedVehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.Uid == vehicle.Uid);
+            Assert.That(updatedVehicle, Is.Not.Null);
+            Assert.That(updatedVehicle.Model, Is.EqualTo("t-48 airspeeder"));
         }
 
         [Test]
@@ -190,7 +237,54 @@ namespace StarWarsApi.Tests.Services
             Assert.That(savedVehicle.Url, Is.EqualTo(vehicleDto.Url));
         }
 
-        [TearDown]
+        [TearDown]        [Test]
+        public void GetVehiclesFromDB_ReturnsAllVehicles()
+        {
+            // Arrange
+            var vehicles = new List<Vehicle>
+            {
+                new Vehicle { Name = "Snowspeeder", Model = "t-47 airspeeder" },
+                new Vehicle { Name = "AT-AT", Model = "All Terrain Armored Transport" }
+            };
+            _context.Vehicles.AddRange(vehicles);
+            _context.SaveChanges();
+
+            // Act
+            var result = _service.GetVehiclesFromDB();
+
+            // Assert
+            Assert.That(result, Has.Count.EqualTo(2));
+            Assert.That(result[0].Name, Is.EqualTo("Snowspeeder"));
+            Assert.That(result[1].Name, Is.EqualTo("AT-AT"));
+        }
+
+        [Test]
+        public void GetVehicleFromDB_ExistingId_ReturnsVehicle()
+        {
+            // Arrange
+            var vehicle = new Vehicle { Name = "Snowspeeder", Model = "t-47 airspeeder" };
+            _context.Vehicles.Add(vehicle);
+            _context.SaveChanges();
+
+            // Act
+            var result = _service.GetVehicleFromDB(vehicle.Uid);
+
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Name, Is.EqualTo("Snowspeeder"));
+            Assert.That(result.Model, Is.EqualTo("t-47 airspeeder"));
+        }
+
+        [Test]
+        public void GetVehicleFromDB_NonExistingId_ReturnsNull()
+        {
+            // Act
+            var result = _service.GetVehicleFromDB("nonexistent");
+
+            // Assert
+            Assert.That(result, Is.Null);
+        }
+
         public void TearDown()
         {
             _context.Dispose();

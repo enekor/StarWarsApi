@@ -72,5 +72,14 @@ namespace StarWarsApi.Mappers.FromApiToController
                 Species = new()
             };
         }
+
+        public List<FilmsDto> MapToControllerList(List<FilmApi>? acFilms)
+        {
+            if (acFilms == null || !acFilms.Any())
+            {
+                return new List<FilmsDto>();
+            }
+            return acFilms.Select(ac => MapToController(ac)).Where(c => c != null).ToList()!;
+        }
     }
 }

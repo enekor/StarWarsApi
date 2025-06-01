@@ -66,7 +66,7 @@ namespace StarWarsApi.Tests.Mappers.FromDatabaseToController
         }
 
         [Test]
-        public void ToDto_WhenDatabaseModelHasNullCollections_ReturnsNullCollections()
+        public void ToDto_WhenDatabaseModelHasNullCollections_ReturnsEmptyCollections()
         {
             // Arrange
             var dbModel = new Films
@@ -85,11 +85,75 @@ namespace StarWarsApi.Tests.Mappers.FromDatabaseToController
 
             // Assert
             Assert.That(result, Is.Not.Null);
-            Assert.That(result.Characters, Is.Null);
-            Assert.That(result.Planets, Is.Null);
-            Assert.That(result.Species, Is.Null);
-            Assert.That(result.Starships, Is.Null);
-            Assert.That(result.Vehicles, Is.Null);
+            Assert.That(result.Characters, Is.Not.Null.And.Empty);
+            Assert.That(result.Planets, Is.Not.Null.And.Empty);
+            Assert.That(result.Species, Is.Not.Null.And.Empty);
+            Assert.That(result.Starships, Is.Not.Null.And.Empty);
+            Assert.That(result.Vehicles, Is.Not.Null.And.Empty);
+        }
+
+        [Test]
+        public void ToDtoList_WhenListIsNull_ReturnsEmptyList()
+        {
+            // Arrange
+            List<Films>? dbModels = null;
+
+            // Act
+            var result = _mapper.ToDtoList(dbModels);
+
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result, Is.Empty);
+        }
+
+        [Test]
+        public void ToDtoList_WhenListIsEmpty_ReturnsEmptyList()
+        {
+            // Arrange
+            var dbModels = new List<Films>();
+
+            // Act
+            var result = _mapper.ToDtoList(dbModels);
+
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result, Is.Empty);
+        }
+
+        [Test]
+        public void ToDtoList_WhenListHasItems_ReturnsCorrectDtos()
+        {
+            // Arrange
+            var now = DateTime.Now;
+            var dbModels = new List<Films>
+            {
+                new Films
+                {
+                    Title = "A New Hope",
+                    Description = "The first Star Wars film",
+                    Created = now,
+                    Edited = now,
+                    Uid = "1"
+                },
+                new Films
+                {
+                    Title = "The Empire Strikes Back",
+                    Description = "The second Star Wars film",
+                    Created = now,
+                    Edited = now,
+                    Uid = "2"
+                }
+            };
+
+            // Act
+            var result = _mapper.ToDtoList(dbModels);
+
+            // Assert
+            Assert.That(result, Has.Count.EqualTo(2));
+            Assert.That(result[0].Title, Is.EqualTo("A New Hope"));
+            Assert.That(result[1].Title, Is.EqualTo("The Empire Strikes Back"));
+            Assert.That(result[0].Description, Is.EqualTo("The first Star Wars film"));
+            Assert.That(result[1].Description, Is.EqualTo("The second Star Wars film"));
         }
     }
 }

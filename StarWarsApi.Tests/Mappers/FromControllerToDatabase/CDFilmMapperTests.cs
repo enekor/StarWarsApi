@@ -118,5 +118,75 @@ namespace StarWarsApi.Tests.Mappers.FromControllerToDatabase
             Assert.That(result.Vehicles, Is.Empty);
             Assert.That(result.Species, Is.Empty);
         }
+
+        [Test]
+        public void ToEntityList_WhenListIsNull_ReturnsEmptyList()
+        {
+            // Arrange
+            List<FilmsDto>? dtos = null;
+
+            // Act
+            var result = _mapper.ToEntityList(dtos);
+
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result, Is.Empty);
+        }
+
+        [Test]
+        public void ToEntityList_WhenListIsEmpty_ReturnsEmptyList()
+        {
+            // Arrange
+            var dtos = new List<FilmsDto>();
+
+            // Act
+            var result = _mapper.ToEntityList(dtos);
+
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result, Is.Empty);
+        }
+
+        [Test]
+        public void ToEntityList_WhenListHasItems_ReturnsCorrectEntities()
+        {
+            // Arrange
+            var now = DateTime.Now;
+            var dtos = new List<FilmsDto>
+            {
+                new FilmsDto
+                {
+                    Title = "A New Hope",
+                    Description = "The first Star Wars film",
+                    Created = now,
+                    Edited = now,
+                    Url = "https://swapi.dev/api/films/1/"
+                },
+                new FilmsDto
+                {
+                    Title = "The Empire Strikes Back",
+                    Description = "The second Star Wars film",
+                    Created = now,
+                    Edited = now,
+                    Url = "https://swapi.dev/api/films/2/"
+                }
+            };
+
+            // Act
+            var result = _mapper.ToEntityList(dtos);
+
+            // Assert
+            Assert.That(result, Has.Count.EqualTo(2));
+            Assert.That(result[0].Title, Is.EqualTo("A New Hope"));
+            Assert.That(result[1].Title, Is.EqualTo("The Empire Strikes Back"));
+            Assert.That(result[0].Description, Is.EqualTo("The first Star Wars film"));
+            Assert.That(result[1].Description, Is.EqualTo("The second Star Wars film"));
+            Assert.That(result[0].Created, Is.EqualTo(now));
+            Assert.That(result[1].Created, Is.EqualTo(now));
+            Assert.That(result[0].Edited, Is.EqualTo(now));
+            Assert.That(result[1].Edited, Is.EqualTo(now));
+            Assert.That(result[0].Url, Is.EqualTo("https://swapi.dev/api/films/1/"));
+            Assert.That(result[1].Url, Is.EqualTo("https://swapi.dev/api/films/2/"));
+        }
     }
 }

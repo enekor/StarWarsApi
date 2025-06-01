@@ -136,5 +136,72 @@ namespace StarWarsApi.Tests.Mappers.FromApiToDatabase
             Assert.That(result.Starships, Is.EqualTo("1,2"));
             Assert.That(result.Vehicles, Is.EqualTo("1,2"));
         }
+
+        [Test]
+        public void MapToDatabaseList_WhenListIsNull_ReturnsEmptyList()
+        {
+            // Arrange
+            List<FilmsApi>? apiModels = null;
+
+            // Act
+            var result = _mapper.MapToDatabaseList(apiModels);
+
+            // Assert
+            Assert.That(result, Is.Empty);
+        }
+
+        [Test]
+        public void MapToDatabaseList_WhenListIsEmpty_ReturnsEmptyList()
+        {
+            // Arrange
+            var apiModels = new List<FilmsApi>();
+
+            // Act
+            var result = _mapper.MapToDatabaseList(apiModels);
+
+            // Assert
+            Assert.That(result, Is.Empty);
+        }
+
+        [Test]
+        public void MapToDatabaseList_WhenListHasItems_ReturnsCorrectDatabaseModels()
+        {
+            // Arrange
+            var apiModels = new List<FilmsApi>
+            {
+                new FilmsApi
+                {
+                    _id = "1",
+                    properties = new FilmsApi.Properties
+                    {
+                        title = "A New Hope",
+                        created = DateTime.Now,
+                        edited = DateTime.Now
+                    },
+                    description = "The first Star Wars film"
+                },
+                new FilmsApi
+                {
+                    _id = "2",
+                    properties = new FilmsApi.Properties
+                    {
+                        title = "Empire Strikes Back",
+                        created = DateTime.Now,
+                        edited = DateTime.Now
+                    },
+                    description = "The second Star Wars film"
+                }
+            };
+
+            // Act
+            var result = _mapper.MapToDatabaseList(apiModels);
+
+            // Assert
+            Assert.That(result, Has.Count.EqualTo(2));
+            Assert.That(result[0].Uid, Is.EqualTo("1"));
+            Assert.That(result[0].Title, Is.EqualTo("A New Hope"));
+            Assert.That(result[1].Uid, Is.EqualTo("2"));
+            Assert.That(result[1].Title, Is.EqualTo("Empire Strikes Back"));
+        }
     }
 }

@@ -21,27 +21,53 @@ namespace StarWarsApi.Tests.Services
     private ModelContext _context;
     private ModelContext _realContext;
 
-    [SetUp]
-    public void Setup()
-    {
-        // Setup mock HTTP handler for unit tests
-        _mockHttpHandler = new Mock<HttpMessageHandler>();
-        _httpClient = new HttpClient(_mockHttpHandler.Object);
-        
-        // Setup in-memory database for unit tests
-        var options = new DbContextOptionsBuilder<ModelContext>()
-            .UseInMemoryDatabase(databaseName: $"StarWarsDb_{Guid.NewGuid()}")
-            .Options;
-        _context = new ModelContext(options);
-        _service = new StarshipService(_httpClient, _context);
+    [SetUp]        public void Setup()
+        {
+            // Setup mock HTTP handler for unit tests
+            _mockHttpHandler = new Mock<HttpMessageHandler>();
+            _httpClient = new HttpClient(_mockHttpHandler.Object);
+            
+            // Setup in-memory database for unit tests
+            var options = new DbContextOptionsBuilder<ModelContext>()
+                .UseInMemoryDatabase(databaseName: $"StarWarsDb_{Guid.NewGuid()}")
+                .Options;
+            _context = new ModelContext(options);
+            _service = new StarshipService(_httpClient, _context);
 
-        // Setup for real integration tests
-        var realHttpClient = new HttpClient();
-        var realOptions = new DbContextOptionsBuilder<ModelContext>()
-            .UseInMemoryDatabase(databaseName: "TestStarWarsStarshipDb")
-            .Options;
-        _realContext = new ModelContext(realOptions);
-        _realService = new StarshipService(realHttpClient, _realContext);
+            // Setup for real integration tests
+            var realHttpClient = new HttpClient();
+            var realOptions = new DbContextOptionsBuilder<ModelContext>()
+                .UseInMemoryDatabase(databaseName: "TestStarWarsStarshipDb")
+                .Options;
+            _realContext = new ModelContext(realOptions);
+            _realService = new StarshipService(realHttpClient, _realContext);
+        }
+
+        [Test]
+        public async Task GetAllStarshipsAsync_WhenApiCallFails_ReturnsEmptyList()
+        {
+            // Arrange
+            var response = new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+                Content = new StringContent("Server Error")
+            };
+
+            _mockHttpHandler
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ReturnsAsync(response);
+
+            // Act
+            var result = await _service.GetAllStarshipsAsync();
+
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result, Is.Empty);
         }
 
         [Test]
@@ -77,39 +103,75 @@ namespace StarWarsApi.Tests.Services
             Assert.That(result.Count, Is.EqualTo(2));
             Assert.That(result[0].Name, Is.EqualTo("X-wing"));
             Assert.That(result[1].Name, Is.EqualTo("TIE Fighter"));
-        }
-
-        [Test]
+        }        [Test]
         public async Task GetStarshipByIdAsync_ExistingId_ReturnsStarship()
         {
             // Arrange
-            var starship = new Starship { Name = "X-wing", Model = "T-65" };
-            await _context.Starships.AddAsync(starship);
-            await _context.SaveChangesAsync();
+            var starshipId = "1";
+            var mockResponse = new StarshipApi 
+            {
+                Name = "X-wing",
+                Model = "T-65",
+                url = $"https://swapi.dev/api/starships/{starshipId}"
+            };
+
+            var response = new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(JsonSerializer.Serialize(mockResponse))
+            };
+
+            _mockHttpHandler
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ReturnsAsync(response);
 
             // Act
-            var result = await _service.GetStarshipByIdAsync(starship.Id);
+            var result = await _service.GetStarshipByIdAsync(starshipId);
 
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Name, Is.EqualTo("X-wing"));
-        }
-
-        [Test]
+            Assert.That(result.Model, Is.EqualTo("T-65"));
+        }        [Test]
         public async Task GetStarshipByIdAsync_NonExistingId_ReturnsNull()
         {
+            // Arrange
+            var starshipId = "999";
+            var response = new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.NotFound,
+                Content = new StringContent("Not Found")
+            };
+
+            _mockHttpHandler
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ReturnsAsync(response);
+
             // Act
-            var result = await _service.GetStarshipByIdAsync("nonexistent");
+            var result = await _service.GetStarshipByIdAsync(starshipId);
 
             // Assert
             Assert.That(result, Is.Null);
-        }
-
-        [Test]
-        public async Task SaveStarshipAsync_SavesToDatabase()
+        }        [Test]
+        public async Task SaveStarshipAsync_NewStarship_SavesToDatabase()
         {
             // Arrange
-            var starshipDto = new StarshipDto { Name = "X-wing", Model = "T-65" };
+            var starshipDto = new StarshipDto
+            {
+                Name = "X-wing",
+                Model = "T-65",
+                Url = "https://swapi.dev/api/starships/12/"
+            };
 
             // Act
             await _service.SaveStarshipAsync(starshipDto);
@@ -118,6 +180,31 @@ namespace StarWarsApi.Tests.Services
             var savedStarship = await _context.Starships.FirstOrDefaultAsync(s => s.Name == "X-wing");
             Assert.That(savedStarship, Is.Not.Null);
             Assert.That(savedStarship.Model, Is.EqualTo("T-65"));
+            Assert.That(savedStarship.Uid, Is.EqualTo("12")); // ID from URL
+        }
+
+        [Test]
+        public async Task SaveStarshipAsync_ExistingStarship_UpdatesDatabase()
+        {
+            // Arrange
+            var starship = new Starship { Name = "X-wing", Model = "T-65" };
+            await _context.Starships.AddAsync(starship);
+            await _context.SaveChangesAsync();
+
+            var starshipDto = new StarshipDto
+            {
+                Name = "X-wing",
+                Model = "T-70",
+                Url = $"https://swapi.dev/api/starships/{starship.Uid}"
+            };
+
+            // Act
+            await _service.SaveStarshipAsync(starshipDto);
+
+            // Assert
+            var updatedStarship = await _context.Starships.FirstOrDefaultAsync(s => s.Uid == starship.Uid);
+            Assert.That(updatedStarship, Is.Not.Null);
+            Assert.That(updatedStarship.Model, Is.EqualTo("T-70"));
         }
 
         [Test]

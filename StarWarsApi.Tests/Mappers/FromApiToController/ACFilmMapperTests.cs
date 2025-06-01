@@ -148,5 +148,18 @@ namespace StarWarsApi.Tests.Mappers.FromApiToController
             Assert.That(result[0].Title, Is.EqualTo("A New Hope"));
             Assert.That(result[1].Title, Is.EqualTo("Empire Strikes Back"));
         }
+
+        [Test]
+        public void MapToControllerList_WhenListIsEmpty_ReturnsEmptyList()
+        {
+            // Arrange
+            var apiModels = new List<FilmsApi>();
+
+            // Act
+            var result = _mapper.MapToControllerList(apiModels);
+
+            // Assert
+            Assert.That(result, Is.Empty);
+        }
     }
 }
