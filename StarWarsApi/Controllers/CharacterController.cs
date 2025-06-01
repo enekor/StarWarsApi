@@ -8,10 +8,6 @@ namespace StarWarsApi.Controllers
 {
     public class CharacterController : ControllerBase
     {
-        public CharacterController()
-        {
-
-        }
         
         private readonly CharacterService _characterService;
 

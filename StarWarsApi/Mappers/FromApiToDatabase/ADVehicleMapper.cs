@@ -26,9 +26,23 @@ namespace StarWarsApi.Mappers.FromApiToDatabase
             }
             return new Vehicle
             {
-                Uid = vehicle.Uid,
-                Name = vehicle.Name,
-                Url = vehicle.Url
+                Uid = vehicle.result.uid,
+                Name = vehicle.result.properties.name,
+                Model = vehicle.result.properties.model,
+                CargoCapacity = vehicle.result.properties.cargo_capacity,
+                Consumables = vehicle.result.properties.consumables,
+                CostInCredits = vehicle.result.properties.cost_in_credits,
+                Crew = vehicle.result.properties.crew,
+                Passengers = vehicle.result.properties.passengers,
+                MaxAtmospheringSpeed = vehicle.result.properties.max_atmosphering_speed,
+                Length = vehicle.result.properties.length,
+                Created = vehicle.result.properties.created,
+                Edited = vehicle.result.properties.edited,
+                Description = vehicle.result.description,
+                Manufacturer = vehicle.result.properties.manufacturer,
+                Url = vehicle.result.properties.url,
+                VehicleClass = vehicle.result.properties.vehicle_class,
+
             };
         }
 

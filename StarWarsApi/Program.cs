@@ -2,6 +2,7 @@ using BDCADAO.BDModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 using StarWarsApi.Services;
+using StarWarsApi.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add database initialization
+builder.Services.AddDatabaseInitialization();
 
 // Add DbContext configuration
 builder.Services.AddDbContext<ModelContext>(options =>
@@ -46,6 +50,13 @@ builder.Services.AddScoped<VehicleService>(sp =>
                       sp.GetRequiredService<ModelContext>()));
 
 var app = builder.Build();
+
+// Initialize the database
+using (var scope = app.Services.CreateScope())
+{
+    var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+    await initializer.InitializeAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

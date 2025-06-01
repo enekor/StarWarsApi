@@ -14,66 +14,92 @@ using StarWarsApi.Mappers.FromControllerToDatabase;
 namespace StarWarsApi.Services
 {
     public class PlanetsService : BaseService
-    {        public PlanetsService(HttpClient httpClient, ModelContext context) : base(context, httpClient)
+    {
+        public PlanetsService(HttpClient httpClient, ModelContext context) : base(context, httpClient)
         {
         }
 
         public async Task<List<PlanetDto>> GetAllPlanetsAsync()
         {
-            var response = await _httpClient.GetAsync($"{_connectionString}/planets");
-            response.EnsureSuccessStatusCode();
-            
-            var content = await response.Content.ReadAsStringAsync();
-            var planets = JsonSerializer.Deserialize<List<PlanetApi>>(content);
-            
-            return planets.Select(p => ACPlanetMapper.Instance.MapToController(p)).ToList();
-        }        public async Task<PlanetDto?> GetPlanetByIdAsync(string id)
-        {
-            PlanetDto? planetDto = null;
             try
             {
-                var response = await _httpClient.GetAsync($"{_connectionString}/planets/{id}");
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var planetApi = JsonSerializer.Deserialize<PlanetApi>(content);
-                    if (planetApi != null)
-                    {
-                        planetDto = ACPlanetMapper.Instance.MapToController(planetApi);
-                    }
-                }
+                var response = await _httpClient.GetAsync($"{_connectionString}/planets");
+                response.EnsureSuccessStatusCode();
+            
+                var content = await response.Content.ReadAsStringAsync();
+                var planets = JsonSerializer.Deserialize<List<PLanetApu>>(content);
+
+                if (planets == null)
+                    return new List<PlanetDto>();
+
+                return planets
+                    .Select(p => ACPlanetMapper.Instance.MapToController(p))
+                    .Where(p => p != null)
+                    .ToList()!;
             }
             catch (Exception e)
             {
-                Console.WriteLine($"error al obtener el planeta con id {id}: {e.Message}");
+                Console.WriteLine($"Error al obtener los planetas: {e.Message}");
+                return new List<PlanetDto>();
             }
-            
-            if (planetDto == null)
+        }
+
+        public async Task<PlanetDto?> GetPlanetByIdAsync(string id)
+        {
+            try
             {
-                // Si no se encuentra en la API o hay error, intentar obtener de la base de datos
-                var data = _context.Planets.GetById(id);
-                planetDto = data != null ? DCPlanetMapper.Instance.ToDto(data) : null;
-            }
+                var response = await _httpClient.GetAsync($"{_connectionString}/planets/{id}");
+                response.EnsureSuccessStatusCode();
             
-            return planetDto;
-        }        public async Task SavePlanetAsync(PlanetDto planetDto)
+                var content = await response.Content.ReadAsStringAsync();
+                var planet = JsonSerializer.Deserialize<PLanetApu>(content);
+
+                if (planet?.result == null)
+                {
+                    // Si no se encuentra en la API, intentar obtener de la base de datos
+                    return GetPlanetFromDB(id);
+                }
+
+                return ACPlanetMapper.Instance.MapToController(planet);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error al obtener el planeta con id {id}: {e.Message}");
+                // Si hay error en la API, intentar obtener de la base de datos
+                return GetPlanetFromDB(id);
+            }
+        }
+
+        public async Task SavePlanetAsync(PlanetDto planetDto)
         {
             var planet = CDPlanetMapper.Instance.ToEntity(planetDto);
-            _context.Planets.InsertOrUpdate(planet);
-            await _context.SaveChangesAsync();
+            if (planet != null)
+            {
+                _context.Planets.InsertOrUpdate(planet);
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task<bool> DeletePlanetAsync(string id)
         {
-            int deleted = _context.Planets.Delete(id);
-
+            var deleted = _context.Planets.Delete(id);
+            await _context.SaveChangesAsync();
             return deleted > 0;
         }
 
-        public PlanetDto GetPlanetFromDB(string id)
+        public PlanetDto? GetPlanetFromDB(string id)
         {
             var planet = _context.Planets.GetById(id);
             return planet != null ? DCPlanetMapper.Instance.ToDto(planet) : null;
+        }
+
+        public List<PlanetDto> GetPlanetsFromDB()
+        {
+            var planets = _context.Planets.GetAll();
+            if (planets == null)
+                return new List<PlanetDto>();
+
+            return DCPlanetMapper.Instance.ToDtoList(planets);
         }
     }
 }

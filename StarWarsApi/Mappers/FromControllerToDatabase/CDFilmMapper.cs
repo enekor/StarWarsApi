@@ -5,7 +5,7 @@ namespace StarWarsApi.Mappers.FromControllerToDatabase
 {
     public class CDFilmMapper
     {
-        private static CDFilmMapper instance;
+        private static CDFilmMapper? instance;
         private CDFilmMapper() { }
         public static CDFilmMapper Instance
         {
@@ -19,33 +19,43 @@ namespace StarWarsApi.Mappers.FromControllerToDatabase
             }
         }
         
-        public Films ToEntity(FilmsDto filmDto)
+        public Films? ToEntity(FilmsDto? filmDto)
         {
             if (filmDto == null)
                 return null;
 
             return new Films
             {
-                Title = filmDto.Title,
-                Characters = string.Join(",",filmDto.Characters.Select(c => c.Url.Split("/").Last()).ToList()),
-                Planets = string.Join(",", filmDto.Planets.Select(p => p.url.Split("/").Last()).ToList()),
-                Starships = string.Join(",", filmDto.Starships.Select(s => s.Url.Split("/").Last()).ToList()),
-                Vehicles = string.Join(",", filmDto.Vehicles.Select(v => v.Url.Split("/").Last()).ToList()),
-                Species = string.Join(",", filmDto.Species.Select(s => s.Url.Split("/").Last()).ToList()),
                 Description = filmDto.Description,
                 Created = filmDto.Created,
                 Edited = filmDto.Edited,
-                Url = filmDto.Url
-
+                Producer = filmDto.Producer,
+                Title = filmDto.Title,
+                EpisodeId = filmDto.EpisodeId,
+                Director = filmDto.Director,
+                ReleaseDate = filmDto.ReleaseDate,
+                OpeningCrawl = filmDto.OpeningCrawl,
+                Url = filmDto.Url,
+                // Convertimos las listas de DTOs a strings con IDs
+                Characters = filmDto.Characters?.Any() == true ? 
+                    string.Join(",", filmDto.Characters.Where(c => c?.Url != null).Select(c => c!.Url!.Split("/").Last())) : null,
+                Planets = filmDto.Planets?.Any() == true ? 
+                    string.Join(",", filmDto.Planets.Where(p => p?.Url != null).Select(p => p!.Url!.Split("/").Last())) : null,
+                Starships = filmDto.Starships?.Any() == true ? 
+                    string.Join(",", filmDto.Starships.Where(s => s?.Url != null).Select(s => s!.Url!.Split("/").Last())) : null,
+                Vehicles = filmDto.Vehicles?.Any() == true ? 
+                    string.Join(",", filmDto.Vehicles.Where(v => v?.Url != null).Select(v => v!.Url!.Split("/").Last())) : null,
+                Species = filmDto.Species?.Any() == true ? 
+                    string.Join(",", filmDto.Species.Where(s => s?.Url != null).Select(s => s!.Url!.Split("/").Last())) : null
             };
         }
 
-        public List<Films> ToEntityList(List<FilmsDto> filmsDto)
+        public List<Films> ToEntityList(List<FilmsDto>? filmsDto)
         {
             if (filmsDto == null || !filmsDto.Any())
                 return new List<Films>();
 
-            return filmsDto.Select(f => ToEntity(f)).ToList();
+            return filmsDto.Select(f => ToEntity(f)).Where(f => f != null).ToList()!;
         }
     }
 }

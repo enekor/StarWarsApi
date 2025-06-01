@@ -18,7 +18,7 @@ namespace StarWarsApi.Mappers.FromApiToDatabase
                 return instance;
             }
         }
-        public Planet MapToDatabase(PlanetApi acPlanet)
+        public Planet MapToDatabase(PLanetApu acPlanet)
         {
             if (acPlanet == null)
             {
@@ -26,13 +26,25 @@ namespace StarWarsApi.Mappers.FromApiToDatabase
             }
             return new Planet
             {
-                Uid = acPlanet.Uid,
-                Name = acPlanet.Name,
-                url = acPlanet.url
+                Uid = acPlanet.result.uid,
+                Name = acPlanet.result.properties.name,
+                Climate = acPlanet.result.properties.climate,
+                SurfaceWater = acPlanet.result.properties.surface_water,
+                Diameter = acPlanet.result.properties.diameter,
+                RotationPeriod = acPlanet.result.properties.rotation_period,
+                Terrain = acPlanet.result.properties.terrain,
+                Gravity = acPlanet.result.properties.gravity,
+                OrbitalPeriod = acPlanet.result.properties.orbital_period,
+                Population = acPlanet.result.properties.population,
+                Url = acPlanet.result.properties.url,
+                Created = acPlanet.result.properties.created,
+                Edited = acPlanet.result.properties.edited,
+                Description = acPlanet.result.description
+                
             };
         }
 
-        public List<Planet> MapToDatabaseList(List<PlanetApi> acPlanets)
+        public List<Planet> MapToDatabaseList(List<PLanetApu> acPlanets)
         {
             if (acPlanets == null || !acPlanets.Any())
             {

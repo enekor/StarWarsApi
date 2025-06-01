@@ -27,9 +27,21 @@ namespace StarWarsApi.Mappers.FromApiToDatabase
             }
             return new Character
             {
-                Uid = acCharacter.Uid,
-                Name = acCharacter.Name,
-                Url = acCharacter.Url
+                Uid = acCharacter.result.uid,
+                Name = acCharacter.result.properties.name,
+                Url = acCharacter.result.properties.url,
+                BirthYear = acCharacter.result.properties.birth_year,
+                Created = acCharacter.result.properties.created,
+                Edited = acCharacter.result.properties.edited,
+                Description = acCharacter.result.description,
+                EyeColor = acCharacter.result.properties.eye_color,
+                Gender = acCharacter.result.properties.gender,
+                HairColor = acCharacter.result.properties.hair_color,
+                Height = acCharacter.result.properties.height,
+                Mass = acCharacter.result.properties.mass,
+                Homeworld = acCharacter.result.properties.homeworld,
+                SkinColor = acCharacter.result.properties.skin_color,
+                
             };
         }
 

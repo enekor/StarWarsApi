@@ -26,9 +26,25 @@ namespace StarWarsApi.Mappers.FromApiToDatabase
             }
             return new Starship
             {
-                Uid = starshipApi.Uid,
-                Name = starshipApi.Name,
-                Url = starshipApi.Url
+                Uid = starshipApi.result.uid,
+                Name = starshipApi.result.properties.name,
+                Model = starshipApi.result.properties.model,
+                Manufacturer = starshipApi.result.properties.manufacturer,
+                CostInCredits = starshipApi.result.properties.cost_in_credits,
+                Length = starshipApi.result.properties.length,
+                MaxAtmospheringSpeed = starshipApi.result.properties.max_atmosphering_speed,
+                Crew = starshipApi.result.properties.crew,
+                Passengers = starshipApi.result.properties.passengers,
+                CargoCapacity = starshipApi.result.properties.cargo_capacity,
+                Consumables = starshipApi.result.properties.consumables,
+                HyperdriveRating = starshipApi.result.properties.hyperdrive_rating,
+                MGLT = starshipApi.result.properties.MGLT,
+                StarshipClass = starshipApi.result.properties.starship_class,
+                Created = starshipApi.result.properties.created,
+                Edited = starshipApi.result.properties.edited,
+                Description = starshipApi.result.description,
+                Url = starshipApi.result.properties.url
+                
             };
         }
 

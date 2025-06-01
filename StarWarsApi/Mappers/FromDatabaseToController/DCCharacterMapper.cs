@@ -5,7 +5,7 @@ namespace StarWarsApi.Mappers.FromDatabaseToController
 {
     public class DCCharacterMapper
     {
-        private static DCCharacterMapper instance;
+        private static DCCharacterMapper? instance;
         private DCCharacterMapper() { }
         public static DCCharacterMapper Instance
         {
@@ -19,24 +19,35 @@ namespace StarWarsApi.Mappers.FromDatabaseToController
             }
         }
         
-        public  CharacterDto ToDto(Character character)
+        public CharacterDto? ToDto(Character? character)
         {
             if (character == null)
                 return null;
 
             return new CharacterDto
             {
+                Description = character.Description,
+                Created = character.Created,
+                Edited = character.Edited,
                 Name = character.Name,
-                Url = character.Url,
+                Gender = character.Gender,
+                SkinColor = character.SkinColor,
+                HairColor = character.HairColor,
+                Height = character.Height,
+                EyeColor = character.EyeColor,
+                Mass = character.Mass,
+                Homeworld = character.Homeworld,
+                BirthYear = character.BirthYear,
+                Url = character.Url
             };
         }
 
-        public  List<CharacterDto> ToDtoList(List<Character> characters)
+        public List<CharacterDto> ToDtoList(List<Character>? characters)
         {
             if (characters == null || !characters.Any())
                 return new List<CharacterDto>();
 
-            return characters.Select(c => ToDto(c)).ToList();
+            return characters.Select(c => ToDto(c)).Where(c => c != null).ToList()!;
         }
     }
 }

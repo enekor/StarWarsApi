@@ -1,6 +1,7 @@
 ﻿namespace StarWarsApi.Models.api
 {
-    public class Properties
+
+    public class FilmProperties
     {
         public DateTime created { get; set; }
         public DateTime edited { get; set; }
@@ -18,12 +19,26 @@
         public string url { get; set; }
     }
 
-    public class FilmsApi
+    public class FilmResult
     {
-        public Properties properties { get; set; }
+        public FilmProperties properties { get; set; }
         public string _id { get; set; }
         public string description { get; set; }
         public string uid { get; set; }
         public int __v { get; set; }
     }
+
+    public class FilmApi
+    {
+        public string message { get; set; }
+        public FilmResult result { get; set; }
+        public string apiVersion { get; set; }
+        public DateTime timestamp { get; set; }
+        public Support support { get; set; }
+        public Social social { get; set; }
+    }
+
+
+
+
 }

@@ -15,210 +15,219 @@ namespace StarWarsApi.Services
 {
     public class FilmsService : BaseService
     {
+        private readonly CharacterService _characterService;
+        private readonly VehicleService _vehicleService;
+        private readonly StarshipService _starshipService;
+        private readonly PlanetsService _planetService;
+        private readonly SpeciesService _speciesService;
 
-        public FilmsService(HttpClient httpClient, ModelContext context) : base(context,httpClient)
+        public FilmsService(HttpClient httpClient, ModelContext context) : base(context, httpClient)
         {
+            _characterService = new CharacterService(httpClient, context);
+            _vehicleService = new VehicleService(httpClient, context);
+            _starshipService = new StarshipService(httpClient, context);
+            _planetService = new PlanetsService(httpClient, context);
+            _speciesService = new SpeciesService(httpClient, context);
         }
 
         public async Task<List<FilmsDto>> GetAllFilmsAsync()
         {
-            CharacterService characterService = new CharacterService(_httpClient, _context);
-            VehicleService vehicleService = new VehicleService(_httpClient, _context);
-            StarshipService starshipService = new StarshipService(_httpClient, _context);
-            PlanetsService planetService = new PlanetsService(_httpClient, _context);
-            SpeciesService speciesService = new SpeciesService(_httpClient, _context);
-
             var response = await _httpClient.GetAsync($"{_connectionString}/films");
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            var films = JsonSerializer.Deserialize<List<FilmsApi>>(content);
+            var films = JsonSerializer.Deserialize<FilmsListApi>(content);
+            
+            var filmDtos = new List<FilmsDto>();
+            if (films == null)
+                return filmDtos;
 
-            var returnerFilms = new List<FilmsDto>();
 
-            foreach (FilmsApi film in films)
+            foreach (var film in films.result)
             {
-                List<CharacterDto> characters = new List<CharacterDto>();
-                List<VehicleDto> vehicles = new List<VehicleDto>();
-                List<StarshipDto> starships = new List<StarshipDto>();
-                List<PlanetDto> planets = new List<PlanetDto>();
-                List<SpeciesDto> species = new List<SpeciesDto>();
+                var filmDto = ACFilmMapper.Instance.MapToController(film);
+                if (filmDto != null)
+                {
+                    await LoadFilmRelations(filmDto, new()
+                    {
+                        result = film
 
-                if (film.properties.characters != null)
-                {
-                    characters = await Task.WhenAll(
-                        film.properties.characters.Select(c => characterService.GetCharacterByIdAsync(c.Split('/').Last()))
-                    ).ContinueWith(t => t.Result.ToList());
+                    });
+                    filmDtos.Add(filmDto);
                 }
-                if (film.properties.vehicles != null)
-                {
-                    vehicles = await Task.WhenAll(
-                        film.properties.vehicles.Select(v => vehicleService.GetVehicleByIdAsync(v.Split('/').Last()))
-                    ).ContinueWith(t => t.Result.ToList());
-                }
-                if (film.properties.starships != null)
-                {
-                    starships = await Task.WhenAll(
-                        film.properties.starships.Select(s => starshipService.GetStarshipByIdAsync(s.Split('/').Last()))
-                    ).ContinueWith(t => t.Result.ToList());
-                }
-                if (film.properties.planets != null)
-                {
-                    planets = await Task.WhenAll(
-                        film.properties.planets.Select(p => planetService.GetPlanetByIdAsync(p.Split('/').Last()))
-                    ).ContinueWith(t => t.Result.ToList());
-                }
-                if (film.properties.species != null)
-                {
-                    species = await Task.WhenAll(
-                        film.properties.species.Select(s => speciesService.GetSpeciesByIdAsync(s.Split('/').Last()))
-                    ).ContinueWith(t => t.Result.ToList());
-                }
-
-                returnerFilms.Add(ACFilmMapper.Instance.MapToController(film, starships, characters, vehicles, planets, species));
             }
 
-
-            return returnerFilms;
+            return filmDtos;
         }
 
-        public async Task<FilmsDto> GetFilmByIdAsync(string id)
+        public async Task<FilmsDto?> GetFilmByIdAsync(string id)
         {
-            CharacterService characterService = new CharacterService(_httpClient, _context);
-            VehicleService vehicleService = new VehicleService(_httpClient, _context);
-            StarshipService starshipService = new StarshipService(_httpClient, _context);
-            PlanetsService planetService = new PlanetsService(_httpClient, _context);
-            SpeciesService speciesService = new SpeciesService(_httpClient, _context);
-
-            List<CharacterDto> characters = new List<CharacterDto>();
-            List<VehicleDto> vehicles = new List<VehicleDto>();
-            List<StarshipDto> starships = new List<StarshipDto>();
-            List<PlanetDto> planets = new List<PlanetDto>();
-            List<SpeciesDto> species = new List<SpeciesDto>();
-
             var response = await _httpClient.GetAsync($"{_connectionString}/films/{id}");
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            var film = JsonSerializer.Deserialize<FilmsApi>(content);
+            var film = JsonSerializer.Deserialize<FilmApi>(content);
 
+            if (film?.result == null)
+                return null;
 
-            if (film.properties.characters != null)
+            var filmDto = ACFilmMapper.Instance.MapToController(film);
+            if (filmDto != null)
             {
-                characters = await Task.WhenAll(
-                    film.properties.characters.Select(c => characterService.GetCharacterByIdAsync(c.Split('/').Last()))
-                ).ContinueWith(t => t.Result.ToList());
-            }
-            if (film.properties.vehicles != null)
-            {
-                vehicles = await Task.WhenAll(
-                    film.properties.vehicles.Select(v => vehicleService.GetVehicleByIdAsync(v.Split('/').Last()))
-                ).ContinueWith(t => t.Result.ToList());
-            }
-            if (film.properties.starships != null)
-            {
-                starships = await Task.WhenAll(
-                    film.properties.starships.Select(s => starshipService.GetStarshipByIdAsync(s.Split('/').Last()))
-                ).ContinueWith(t => t.Result.ToList());
-            }
-            if (film.properties.planets != null)
-            {
-                planets = await Task.WhenAll(
-                    film.properties.planets.Select(p => planetService.GetPlanetByIdAsync(p.Split('/').Last()))
-                ).ContinueWith(t => t.Result.ToList());
-            }
-            if (film.properties.species != null)
-            {
-                species = await Task.WhenAll(
-                    film.properties.species.Select(s => speciesService.GetSpeciesByIdAsync(s.Split('/').Last()))
-                ).ContinueWith(t => t.Result.ToList());
+                await LoadFilmRelations(filmDto, film);
             }
 
-
-            return ACFilmMapper.Instance.MapToController(film, starships, characters, vehicles, planets, species);
+            return filmDto;
         }
+
+        private async Task LoadFilmRelations(FilmsDto filmDto, FilmApi film)
+        {
+            // Cargar personajes
+            if (film.result?.properties?.characters != null)
+            {
+                filmDto.Characters = (await Task.WhenAll(
+                    film.result.properties.characters
+                        .Select(c => _characterService.GetCharacterByIdAsync(c.Split('/').Last()))
+                )).Where(c => c != null).ToList();
+            }
+
+            // Cargar vehículos
+            if (film.result?.properties?.vehicles != null)
+            {
+                filmDto.Vehicles = (await Task.WhenAll(
+                    film.result.properties.vehicles
+                        .Select(v => _vehicleService.GetVehicleByIdAsync(v.Split('/').Last()))
+                )).Where(v => v != null).ToList();
+            }
+
+            // Cargar naves
+            if (film.result?.properties?.starships != null)
+            {
+                filmDto.Starships = (await Task.WhenAll(
+                    film.result.properties.starships
+                        .Select(s => _starshipService.GetStarshipByIdAsync(s.Split('/').Last()))
+                )).Where(s => s != null).ToList();
+            }
+
+            // Cargar planetas
+            if (film.result?.properties?.planets != null)
+            {
+                filmDto.Planets = (await Task.WhenAll(
+                    film.result.properties.planets
+                        .Select(p => _planetService.GetPlanetByIdAsync(p.Split('/').Last()))
+                )).Where(p => p != null).ToList();
+            }
+
+            // Cargar especies
+            if (film.result?.properties?.species != null)
+            {
+                filmDto.Species = (await Task.WhenAll(
+                    film.result.properties.species
+                        .Select(s => _speciesService.GetSpeciesByIdAsync(s.Split('/').Last()))
+                )).Where(s => s != null).ToList();
+            }
+        }
+
         public async Task SaveFilmAsync(FilmsDto filmDto)
         {
-            var film = await GetFilmByIdAsync(filmDto.Url.Split("/").Last());
+            var film = CDFilmMapper.Instance.ToEntity(filmDto);
 
-            foreach (var character in filmDto.Characters)
+            foreach(var character in filmDto.Characters ?? new List<CharacterDto>())
             {
-                _context.Characters.InsertOrUpdate(CDCharacterMapper.Instance.ToEntity(character));
-                await _context.SaveChangesAsync();
+                _characterService.SaveCharacterAsync(character);
             }
 
-            foreach (var vehicle in filmDto.Vehicles)
+            foreach (var vehicle in filmDto.Vehicles ?? new List<VehicleDto>())
             {
-                _context.Vehicles.InsertOrUpdate(CDVehicleMapper.Instance.ToEntity(vehicle));
-                await _context.SaveChangesAsync();
+                _vehicleService.SaveVehicleAsync(vehicle);
             }
 
-            foreach (var starship in filmDto.Starships)
+            foreach (var starship in filmDto.Starships ?? new List<StarshipDto>())
             {
-                _context.Starships.InsertOrUpdate(CDStarshipMapper.Instance.ToEntity(starship));
-                await _context.SaveChangesAsync();
+                _starshipService.SaveStarshipAsync(starship);
             }
 
             foreach (var planet in filmDto.Planets)
             {
-                _context.Planets.InsertOrUpdate(CDPlanetMapper.Instance.ToEntity(planet));
-                await _context.SaveChangesAsync();
+                _planetService.SavePlanetAsync(planet);
             }
 
-            foreach (var species in filmDto.Species)
+            foreach (var species in filmDto.Species ?? new List<SpeciesDto>())
             {
-                _context.Species.InsertOrUpdate(CDSpecieMapper.Instance.ToEntity(species));
-                await _context.SaveChangesAsync();
+                _speciesService.SaveSpeciesAsync(species);
             }
 
-            _context.Films.InsertOrUpdate(CDFilmMapper.Instance.ToEntity(filmDto));
-            await _context.SaveChangesAsync();
+            if (film != null)
+            {
+                _context.Films.InsertOrUpdate(film);
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task<bool> DeleteFilmAsync(string id)
         {
             int deleted = _context.Films.Delete(id);
-
+            await _context.SaveChangesAsync();
             return deleted > 0;
-        }        public List<FilmsDto> GetFilmsFromDB()
+        }
+
+        public FilmsDto? GetFilmFromDB(string id)
         {
-            // Create necessary services
-            CharacterService characterService = new CharacterService(_httpClient, _context);
-            VehicleService vehicleService = new VehicleService(_httpClient, _context);
-            StarshipService starshipService = new StarshipService(_httpClient, _context);
-            PlanetsService planetService = new PlanetsService(_httpClient, _context);
-            SpeciesService speciesService = new SpeciesService(_httpClient, _context);
+            var film = _context.Films.GetById(id);
+            if (film == null)
+                return null;
 
-            // Get all films from database
-            var films = _context.Films.GetAll();
-            var filmDtos = new List<FilmsDto>();
+            var filmDto = DCFilmMapper.Instance.ToDto(film);
+            if (filmDto == null)
+                return null;
 
-            foreach (var film in films)
-            {                // Split and get characters
-                List<String> characterIds = film.Characters?.Split(',').ToList() ?? new List<string>();
-                var characters = characterIds.Select(id => characterService.GetCharacterFromDB(id)).ToList();
-
-                // Split and get vehicles
-                List<String> vehicleIds = film.Vehicles?.Split(',').ToList() ?? new List<string>();
-                var vehicles = vehicleIds.Select(id => vehicleService.GetVehicleFromDB(id)).ToList();
-
-                // Split and get starships
-                List<String> starshipIds = film.Starships?.Split(',').ToList() ?? new List<string>();
-                var starships = starshipIds.Select(id => starshipService.GetStarshipFromDB(id)).ToList();
-
-                // Split and get planets
-                List<String> planetIds = film.Planets?.Split(',').ToList() ?? new List<string>();
-                var planets = planetIds.Select(id => planetService.GetPlanetFromDB(id)).ToList();
-
-                // Split and get species
-                List<String> speciesIds = film.Species?.Split(',').ToList() ?? new List<string>();
-                var species = speciesIds.Select(id => speciesService.GetSpecieFromDB(id)).ToList();
-
-                // Map to DTO with all related data
-                filmDtos.Add(DCFilmMapper.Instance.ToDto(film, starships, characters, vehicles, planets, species));
+            // Cargar las entidades relacionadas desde la base de datos
+            if (!string.IsNullOrEmpty(film.Characters))
+            {
+                filmDto.Characters = film.Characters.Split(',')
+                    .Select(cid => _characterService.GetCharacterFromDB(cid))
+                    .Where(c => c != null)
+                    .ToList();
             }
 
-            return filmDtos;
+            if (!string.IsNullOrEmpty(film.Vehicles))
+            {
+                filmDto.Vehicles = film.Vehicles.Split(',')
+                    .Select(vid => _vehicleService.GetVehicleFromDB(vid))
+                    .Where(v => v != null)
+                    .ToList();
+            }
+
+            if (!string.IsNullOrEmpty(film.Starships))
+            {
+                filmDto.Starships = film.Starships.Split(',')
+                    .Select(sid => _starshipService.GetStarshipFromDB(sid))
+                    .Where(s => s != null)
+                    .ToList();
+            }
+
+            if (!string.IsNullOrEmpty(film.Planets))
+            {
+                filmDto.Planets = film.Planets.Split(',')
+                    .Select(pid => _planetService.GetPlanetFromDB(pid))
+                    .Where(p => p != null)
+                    .ToList();
+            }
+
+            if (!string.IsNullOrEmpty(film.Species))
+            {
+                filmDto.Species = film.Species.Split(',')
+                    .Select(sid => _speciesService.GetSpecieFromDB(sid))
+                    .Where(s => s != null)
+                    .ToList();
+            }
+
+            return filmDto;
+        }
+
+        public List<FilmsDto> GetFilmsFromDB()
+        {
+            return DCFilmMapper.Instance.ToDtoList(_context.Films.GetAll());
         }
     }
 }

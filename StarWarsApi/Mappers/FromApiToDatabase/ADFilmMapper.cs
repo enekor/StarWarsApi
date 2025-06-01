@@ -19,7 +19,7 @@ namespace StarWarsApi.Mappers.FromApiToDatabase
                 return instance;
             }
         }
-        public Films MapToDatabase(FilmsApi acFilm)
+        public Films MapToDatabase(FilmApi acFilm)
         {
             if (acFilm == null)
             {
@@ -27,21 +27,21 @@ namespace StarWarsApi.Mappers.FromApiToDatabase
             }
             return new Films
             {
-                Uid = acFilm._id,
-                Title = acFilm.properties.title,
-                Description = acFilm.description,
-                Created = acFilm.properties.created,
-                Edited = acFilm.properties.edited,
-                Starships = acFilm.properties.starships != null ? string.Join(",", acFilm.properties.starships.Select(v => v.Split("/").Last())) : string.Empty,
-                Vehicles = acFilm.properties.vehicles != null ? string.Join(",", acFilm.properties.vehicles.Select(v => v.Split("/").Last())) : string.Empty,
-                Characters = acFilm.properties.characters != null ? string.Join(",", acFilm.properties.characters.Select(v => v.Split("/").Last())) : string.Empty,
-                Planets = acFilm.properties.planets != null ? string.Join(",", acFilm.properties.planets.Select(v => v.Split("/").Last())) : string.Empty,
-                Species = acFilm.properties.species != null ? string.Join(",", acFilm.properties.species.Select(v => v.Split("/").Last())) : string.Empty,
-                Url = acFilm.properties.url
+                Uid = acFilm.result.uid,
+                Title = acFilm.result.properties.title,
+                Description = acFilm.result.description,
+                Created = acFilm.result.properties.created,
+                Edited = acFilm.result.properties.edited,
+                Starships = acFilm.result.properties.starships != null ? string.Join(",", acFilm.result.properties.starships.Select(v => v.Split("/").Last())) : string.Empty,
+                Vehicles = acFilm.result.properties.vehicles != null ? string.Join(",", acFilm.result.properties.vehicles.Select(v => v.Split("/").Last())) : string.Empty,
+                Characters = acFilm.result.properties.characters != null ? string.Join(",", acFilm.result.properties.characters.Select(v => v.Split("/").Last())) : string.Empty,
+                Planets = acFilm.result.properties.planets != null ? string.Join(",", acFilm.result.properties.planets.Select(v => v.Split("/").Last())) : string.Empty,
+                Species = acFilm.result.properties.species != null ? string.Join(",", acFilm.result.properties.species.Select(v => v.Split("/").Last())) : string.Empty,
+                Url = acFilm.result.properties.url
             };
         }
 
-        public List<Films> MapToDatabaseList(List<FilmsApi> acFilms)
+        public List<Films> MapToDatabaseList(List<FilmApi> acFilms)
         {
             if (acFilms == null || !acFilms.Any())
             {

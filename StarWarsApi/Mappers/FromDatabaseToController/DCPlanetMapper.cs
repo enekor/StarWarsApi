@@ -5,7 +5,7 @@ namespace StarWarsApi.Mappers.FromDatabaseToController
 {
     public class DCPlanetMapper
     {
-        private static DCPlanetMapper instance;
+        private static DCPlanetMapper? instance;
         private DCPlanetMapper() { }
         public static DCPlanetMapper Instance
         {
@@ -19,24 +19,35 @@ namespace StarWarsApi.Mappers.FromDatabaseToController
             }
         }
         
-        public  PlanetDto ToDto(Planet planet)
+        public PlanetDto? ToDto(Planet? planet)
         {
             if (planet == null)
                 return null;
 
             return new PlanetDto
             {
+                Description = planet.Description,
+                Created = planet.Created,
+                Edited = planet.Edited,
+                Climate = planet.Climate,
+                SurfaceWater = planet.SurfaceWater,
                 Name = planet.Name,
-                url = planet.url,
+                Diameter = planet.Diameter,
+                RotationPeriod = planet.RotationPeriod,
+                Terrain = planet.Terrain,
+                Gravity = planet.Gravity,
+                OrbitalPeriod = planet.OrbitalPeriod,
+                Population = planet.Population,
+                Url = planet.Url
             };
         }
 
-        public  List<PlanetDto> ToDtoList(List<Planet> planets)
+        public List<PlanetDto> ToDtoList(List<Planet>? planets)
         {
             if (planets == null || !planets.Any())
                 return new List<PlanetDto>();
 
-            return planets.Select(p => ToDto(p)).ToList();
+            return planets.Select(p => ToDto(p)).Where(p => p != null).ToList()!;
         }
     }
 }

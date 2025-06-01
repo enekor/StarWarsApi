@@ -18,7 +18,7 @@ namespace StarWarsApi.Mappers.FromApiToDatabase
                 return instance;
             }
         }
-        public Species MapToDatabase(SpeciesApi specieApi)
+        public Species MapToDatabase(SpecieApi specieApi)
         {
             if (specieApi == null)
             {
@@ -26,13 +26,22 @@ namespace StarWarsApi.Mappers.FromApiToDatabase
             }
             return new Species
             {
-                Uid = specieApi.Uid,
-                Name = specieApi.Name,
-                Url = specieApi.Url
+                AverageHeight = specieApi.result.properties.average_height,
+                AverageLifespan = specieApi.result.properties.average_lifespan,
+                Classification = specieApi.result.properties.classification,
+                Created = specieApi.result.properties.created,
+                Description = specieApi.result.description,
+                Designation = specieApi.result.properties.designation,
+                Edited = specieApi.result.properties.edited,
+                Homeworld = specieApi.result.properties.homeworld,
+                Language = specieApi.result.properties.language,
+                Name = specieApi.result.properties.name,
+                Uid = specieApi.result.uid,
+                Url = specieApi.result.properties.url,
             };
         }
 
-        public List<Species> MapToDatabaseList(List<SpeciesApi> speciesApiList)
+        public List<Species> MapToDatabaseList(List<SpecieApi> speciesApiList)
         {
             if (speciesApiList == null || !speciesApiList.Any())
             {

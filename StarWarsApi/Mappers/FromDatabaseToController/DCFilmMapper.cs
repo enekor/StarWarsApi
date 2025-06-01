@@ -1,5 +1,3 @@
-using System.IO;
-using StarWarsApi.Daos;
 using StarWarsApi.Models.controller;
 using StarWarsApi.Models.database;
 
@@ -7,7 +5,7 @@ namespace StarWarsApi.Mappers.FromDatabaseToController
 {
     public class DCFilmMapper
     {
-        private static DCFilmMapper instance;
+        private static DCFilmMapper? instance;
         private DCFilmMapper() { }
         public static DCFilmMapper Instance
         {
@@ -21,24 +19,38 @@ namespace StarWarsApi.Mappers.FromDatabaseToController
             }
         }
         
-        public  FilmsDto ToDto(Films film, List<StarshipDto> starships, List<CharacterDto> characters, List<VehicleDto> vehicles, List<PlanetDto> planets, List<SpeciesDto> species)
+        public FilmsDto? ToDto(Films? film, List<StarshipDto>? starships = null, List<CharacterDto>? characters = null, 
+            List<VehicleDto>? vehicles = null, List<PlanetDto>? planets = null, List<SpeciesDto>? species = null)
         {
             if (film == null)
                 return null;
 
             return new FilmsDto
             {
-                Title = film.Title,
-                Characters = characters,
-                Planets = planets,
-                Species = species,
-                Starships = starships,
-                Vehicles = vehicles,
                 Description = film.Description,
                 Created = film.Created,
                 Edited = film.Edited,
-                Url = film.Url
+                Producer = film.Producer,
+                Title = film.Title,
+                EpisodeId = film.EpisodeId,
+                Director = film.Director,
+                ReleaseDate = film.ReleaseDate,
+                OpeningCrawl = film.OpeningCrawl,
+                Url = film.Url,
+                Starships = starships ?? new List<StarshipDto>(),
+                Characters = characters ?? new List<CharacterDto>(),
+                Vehicles = vehicles ?? new List<VehicleDto>(),
+                Planets = planets ?? new List<PlanetDto>(),
+                Species = species ?? new List<SpeciesDto>()
             };
+        }
+
+        public List<FilmsDto> ToDtoList(List<Films>? films)
+        {
+            if (films == null || !films.Any())
+                return new List<FilmsDto>();
+
+            return films.Select(f => ToDto(f)).Where(f => f != null).ToList()!;
         }
     }
 }

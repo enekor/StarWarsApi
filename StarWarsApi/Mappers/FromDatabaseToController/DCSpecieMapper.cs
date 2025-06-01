@@ -5,7 +5,7 @@ namespace StarWarsApi.Mappers.FromDatabaseToController
 {
     public class DCSpecieMapper
     {
-        private static DCSpecieMapper instance;
+        private static DCSpecieMapper? instance;
         private DCSpecieMapper() { }
         public static DCSpecieMapper Instance
         {
@@ -19,24 +19,33 @@ namespace StarWarsApi.Mappers.FromDatabaseToController
             }
         }
         
-        public  SpeciesDto ToDto(Species species)
+        public SpeciesDto? ToDto(Species? species)
         {
             if (species == null)
                 return null;
 
             return new SpeciesDto
             {
+                Description = species.Description,
+                Created = species.Created,
+                Edited = species.Edited,
+                Classification = species.Classification,
                 Name = species.Name,
-                Url = species.Url,
+                Designation = species.Designation,
+                Language = species.Language,
+                Homeworld = species.Homeworld,
+                AverageLifespan = species.AverageLifespan,
+                AverageHeight = species.AverageHeight,
+                Url = species.Url
             };
         }
 
-        public  List<SpeciesDto> ToDtoList(List<Species> species)
+        public List<SpeciesDto> ToDtoList(List<Species>? species)
         {
             if (species == null || !species.Any())
                 return new List<SpeciesDto>();
 
-            return species.Select(s => ToDto(s)).ToList();
+            return species.Select(s => ToDto(s)).Where(s => s != null).ToList()!;
         }
     }
 }

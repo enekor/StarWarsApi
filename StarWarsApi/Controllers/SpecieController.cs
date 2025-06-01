@@ -8,7 +8,6 @@ namespace StarWarsApi.Controllers
 {
     public class SpecieController : ControllerBase
     {
-        private readonly ModelContext _context;
         private readonly SpeciesService _specieService;
 
         public SpecieController(SpeciesService specieService)

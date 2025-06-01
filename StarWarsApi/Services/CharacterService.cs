@@ -14,54 +14,71 @@ namespace StarWarsApi.Services
 {
     public class CharacterService : BaseService
     {
-
-        public CharacterService(HttpClient httpClient, ModelContext context) : base(context,httpClient)
+        public CharacterService(HttpClient httpClient, ModelContext context) : base(context, httpClient)
         {
         }
 
         public async Task<List<CharacterDto>> GetAllCharactersAsync()
         {
-            var response = await _httpClient.GetAsync($"{_connectionString}/people");
-            response.EnsureSuccessStatusCode();
-            
-            var content = await response.Content.ReadAsStringAsync();
-            var characters = JsonSerializer.Deserialize<List<CharacterApi>>(content);
-            
-            return characters.Select(c => ACCharacterMapper.Instance.MapToController(c)).ToList();
-        }
-        public async Task<CharacterDto?> GetCharacterByIdAsync(string id)
-        {
-            CharacterDto? characterDto = null;
             try
             {
-                var response = await _httpClient.GetAsync($"{_connectionString}/people/{id}");
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var characterApi = JsonSerializer.Deserialize<CharacterApi>(content);
+                var response = await _httpClient.GetAsync($"{_connectionString}/people");
+                response.EnsureSuccessStatusCode();
+            
+                var content = await response.Content.ReadAsStringAsync();
+                var characters = JsonSerializer.Deserialize<List<CharacterApi>>(content);
 
-                    characterDto = ACCharacterMapper.Instance.MapToController(characterApi);
-                }
+                if (characters == null)
+                    return new List<CharacterDto>();
+
+                return characters
+                    .Select(c => ACCharacterMapper.Instance.MapToController(c))
+                    .Where(c => c != null)
+                    .ToList()!;
             }
             catch (Exception e)
             {
-                Console.WriteLine($"error al obtener el personaje con id {id}: {e.Message}");
+                Console.WriteLine($"Error al obtener los personajes: {e.Message}");
+                return new List<CharacterDto>();
             }
+        }
+
+        public async Task<CharacterDto?> GetCharacterByIdAsync(string id)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_connectionString}/people/{id}");
+                response.EnsureSuccessStatusCode();
             
-            return characterDto;
+                var content = await response.Content.ReadAsStringAsync();
+                var character = JsonSerializer.Deserialize<CharacterApi>(content);
+
+                return ACCharacterMapper.Instance.MapToController(character);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error al obtener el personaje con id {id}: {e.Message}");
+                return null;
+            }
         }
 
         public List<CharacterDto> GetCharactersFromDB()
         {
             var characters = _context.Characters.GetAll();
+            if (characters == null)
+                return new List<CharacterDto>();
+
             return DCCharacterMapper.Instance.ToDtoList(characters);
         }
 
         public async Task SaveCharacterAsync(CharacterDto characterDto)
         {
             var character = CDCharacterMapper.Instance.ToEntity(characterDto);
-            _context.Characters.InsertOrUpdate(character);
-            await _context.SaveChangesAsync();
+            if (character != null)
+            {
+                _context.Characters.InsertOrUpdate(character);
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task<bool> DeleteCharacterAsync(string id)
@@ -71,10 +88,10 @@ namespace StarWarsApi.Services
             return deleted > 0;
         }
 
-        public CharacterDto GetCharacterFromDB(string id)
+        public CharacterDto? GetCharacterFromDB(string id)
         {
             var character = _context.Characters.GetById(id);
-            return DCCharacterMapper.Instance.ToDto(character);
+            return character != null ? DCCharacterMapper.Instance.ToDto(character) : null;
         }
     }
 }

@@ -26,7 +26,7 @@ namespace StarWarsApi.Controllers
         public async Task<ActionResult<Films>> CreateFilm([FromBody] FilmsDto film)
         {
              _filmService.SaveFilmAsync(film);
-            return CreatedAtAction("Insert film", film);
+            return Ok("Film inserted succesfully");
         }
 
         [HttpDelete("/[controller]/DeleteFilm/{id}")]

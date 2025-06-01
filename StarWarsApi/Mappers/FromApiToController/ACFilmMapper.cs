@@ -5,7 +5,7 @@ namespace StarWarsApi.Mappers.FromApiToController
 {
     public class ACFilmMapper
     {
-        private static ACFilmMapper instance;
+        private static ACFilmMapper? instance;
         private ACFilmMapper() { }
         public static ACFilmMapper Instance
         {
@@ -18,26 +18,59 @@ namespace StarWarsApi.Mappers.FromApiToController
                 return instance;
             }
         }
-        public FilmsDto MapToController(FilmsApi acFilm, List<StarshipDto> starships, List<CharacterDto> characters, List<VehicleDto> vehicles, List<PlanetDto> planets, List<SpeciesDto> species)
+
+        public FilmsDto? MapToController(FilmApi? acFilm)
+        {
+            if (acFilm?.result == null)
+            {
+                return null;
+            }
+
+            return new FilmsDto
+            {
+                Description = acFilm.result.description,
+                Created = acFilm.result.properties.created,
+                Edited = acFilm.result.properties.edited,
+                Producer = acFilm.result.properties.producer,
+                Title = acFilm.result.properties.title,
+                EpisodeId = acFilm.result.properties.episode_id,
+                Director = acFilm.result.properties.director,
+                ReleaseDate = acFilm.result.properties.release_date,
+                OpeningCrawl = acFilm.result.properties.opening_crawl,
+                Url = acFilm.result.properties.url,
+                Starships = new(),
+                Characters = new(),
+                Vehicles = new(),
+                Planets = new(),
+                Species = new()
+            };
+        }
+        
+        public FilmsDto? MapToController(FilmResult? acFilm)
         {
             if (acFilm == null)
             {
                 return null;
             }
+
             return new FilmsDto
             {
-                Title = acFilm.properties.title,
                 Description = acFilm.description,
                 Created = acFilm.properties.created,
                 Edited = acFilm.properties.edited,
-                Starships = starships,
-                Characters = characters,
-                Vehicles = vehicles,
-                Planets = planets,
-                Species = species,
-                Url = acFilm.properties.url
+                Producer = acFilm.properties.producer,
+                Title = acFilm.properties.title,
+                EpisodeId = acFilm.properties.episode_id,
+                Director = acFilm.properties.director,
+                ReleaseDate = acFilm.properties.release_date,
+                OpeningCrawl = acFilm.properties.opening_crawl,
+                Url = acFilm.properties.url,
+                Starships = new(),
+                Characters = new(),
+                Vehicles = new(),
+                Planets = new(),
+                Species = new()
             };
         }
-
     }
 }

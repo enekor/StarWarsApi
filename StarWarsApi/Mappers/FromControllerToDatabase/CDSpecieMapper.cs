@@ -5,7 +5,7 @@ namespace StarWarsApi.Mappers.FromControllerToDatabase
 {
     public class CDSpecieMapper
     {
-        private static CDSpecieMapper instance;
+        private static CDSpecieMapper? instance;
         private CDSpecieMapper() { }
         public static CDSpecieMapper Instance
         {
@@ -19,24 +19,33 @@ namespace StarWarsApi.Mappers.FromControllerToDatabase
             }
         }
         
-        public Species ToEntity(SpeciesDto specieDto)
+        public Species? ToEntity(SpeciesDto? specieDto)
         {
             if (specieDto == null)
                 return null;
 
             return new Species
             {
+                Description = specieDto.Description,
+                Created = specieDto.Created,
+                Edited = specieDto.Edited,
+                Classification = specieDto.Classification,
                 Name = specieDto.Name,
-                Url = specieDto.Url,
+                Designation = specieDto.Designation,
+                Language = specieDto.Language,
+                Homeworld = specieDto.Homeworld,
+                AverageLifespan = specieDto.AverageLifespan,
+                AverageHeight = specieDto.AverageHeight,
+                Url = specieDto.Url
             };
         }
 
-        public List<Species> ToEntityList(List<SpeciesDto> speciesDto)
+        public List<Species> ToEntityList(List<SpeciesDto>? speciesDto)
         {
             if (speciesDto == null || !speciesDto.Any())
                 return new List<Species>();
 
-            return speciesDto.Select(s => ToEntity(s)).ToList();
+            return speciesDto.Select(s => ToEntity(s)).Where(s => s != null).ToList()!;
         }
     }
 }

@@ -8,11 +8,7 @@ namespace StarWarsApi.Controllers
 {
     public class PlanetController : ControllerBase
     {
-        private readonly ModelContext _context;
-        public PlanetController()
-        {
 
-        }
         
         private readonly PlanetsService _planetService;
 
