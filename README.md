@@ -1,100 +1,182 @@
-# StarWarsApi
+# StarWarsApi y SWConsoleApp
 
-Esta es una API REST que sirve como wrapper para la [SWAPI (Star Wars API)](https://swapi.dev/), proporcionando endpoints para acceder a información sobre personajes, películas, planetas, especies, naves espaciales y vehículos del universo de Star Wars.
+## Descripción
+Este proyecto contiene una API REST (StarWarsApi) y una aplicación de consola (SWConsoleApp) para interactuar con datos del universo Star Wars. La API actúa como wrapper de [SWAPI](https://swapi.dev/) y permite almacenar información en una base de datos SQLite local. La consola permite consultar y guardar películas usando la API.
 
-## Características
+---
 
-- Integración con SWAPI
-- Almacenamiento en base de datos local
-- Mapeo entre diferentes modelos de datos (API, Database, Controller)
-- Endpoints RESTful para todas las entidades
-- Tests unitarios y de integración
+## Pasos para ejecutar
 
-## Tecnologías Utilizadas
+1. **Ejecuta primero la API**
+   - Ve a la carpeta `StarWarsApi` y ejecuta:
+   ```powershell
+   dotnet run
+   ```
+   La API estará disponible en:
+   - https://localhost:7079 (HTTPS)
+   - http://localhost:5212 (HTTP)
 
-- .NET 8.0
-- Entity Framework Core
-- NUnit (para testing)
-- Moq (para mocking en tests)
+2. **Ejecuta la aplicación de consola**
+   - Ve a la carpeta `SWConsoleApp` y ejecuta:
+   ```powershell
+   dotnet run
+   ```
 
-## Estructura del Proyecto
+---
 
+## Endpoints principales
+
+Los endpoints siguen el patrón:
 ```
-StarWarsApi/
-├── Controllers/          # Controladores REST
-├── Services/            # Lógica de negocio
-├── Models/              # Modelos de datos
-│   ├── api/            # Modelos de SWAPI
-│   ├── controller/     # DTOs
-│   └── database/       # Entidades de base de datos
-├── Mappers/            # Conversión entre modelos
-└── Tests/              # Tests unitarios y de integración
+/{ControllerName}/{Action}
+```
+Donde `{ControllerName}` es el nombre del controller sin la palabra `Controller` (por ejemplo, `Film` para `FilmController`).
+
+### Importante sobre `/Film/GetFilms`
+- El endpoint `GET /Film/GetFilms` es el root de toda la información y el más completo.
+- Al llamarlo, se carga toda la información de películas junto con todos sus personajes, vehículos, planetas, especies y starships relacionados.
+- Esto permite una navegación fluida y sin esperas en la aplicación de consola, ya que todos los datos necesarios se obtienen de una sola vez.
+- **Nota:** Debido a la cantidad de datos que devuelve, la primera carga puede tardar unos segundos.
+
+Ejemplos para películas:
+- `GET    /Film/GetFilms`              (películas desde SWAPI, con toda la información relacionada)
+- `GET    /Film/GetFilmsFromDatabase`  (películas desde la base de datos local)
+- `POST   /Film/SaveFilm`              (guardar película en la base de datos)
+- `DELETE /Film/DeleteFilm/{id}`       (eliminar película de la base de datos)
+
+Otros controllers disponibles: `Character`, `Planet`, `Specie`, `Starship`, `Vehicle`.
+
+Consulta las anotaciones `[HttpGet]`, `[HttpPost]`, `[HttpDelete]` en los controllers para ver todos los endpoints.
+
+---
+
+## Esquema de la base de datos (SQLite)
+
+A continuación se muestran las sentencias SQL para crear las tablas principales:
+
+```sql
+CREATE TABLE "characters" (
+    "_id" TEXT PRIMARY KEY,
+    "description" TEXT,
+    "created" TEXT NOT NULL,
+    "edited" TEXT NOT NULL,
+    "name" TEXT,
+    "gender" TEXT,
+    "skin_color" TEXT,
+    "hair_color" TEXT,
+    "height" TEXT,
+    "eye_color" TEXT,
+    "mass" TEXT,
+    "homeworld" TEXT,
+    "birth_year" TEXT,
+    "url" TEXT
+);
+
+CREATE TABLE "films" (
+    "_id" TEXT PRIMARY KEY,
+    "description" TEXT,
+    "created" TEXT NOT NULL,
+    "edited" TEXT NOT NULL,
+    "starships" TEXT,
+    "vehicles" TEXT,
+    "planets" TEXT,
+    "producer" TEXT,
+    "title" TEXT,
+    "episode_id" INTEGER NOT NULL,
+    "director" TEXT,
+    "release_date" TEXT,
+    "opening_crawl" TEXT,
+    "characters" TEXT,
+    "species" TEXT,
+    "url" TEXT
+);
+
+CREATE TABLE "planets" (
+    "_id" TEXT PRIMARY KEY,
+    "description" TEXT,
+    "created" TEXT NOT NULL,
+    "edited" TEXT NOT NULL,
+    "climate" TEXT,
+    "surface_water" TEXT,
+    "name" TEXT,
+    "diameter" TEXT,
+    "rotation_period" TEXT,
+    "terrain" TEXT,
+    "gravity" TEXT,
+    "orbital_period" TEXT,
+    "population" TEXT,
+    "url" TEXT
+);
+
+CREATE TABLE "species" (
+    "_id" TEXT PRIMARY KEY,
+    "description" TEXT,
+    "created" TEXT NOT NULL,
+    "edited" TEXT NOT NULL,
+    "classification" TEXT,
+    "name" TEXT,
+    "designation" TEXT,
+    "language" TEXT,
+    "homeworld" TEXT,
+    "average_lifespan" TEXT,
+    "average_height" TEXT,
+    "url" TEXT
+);
+
+CREATE TABLE "starships" (
+    "_id" TEXT PRIMARY KEY,
+    "description" TEXT,
+    "created" TEXT NOT NULL,
+    "edited" TEXT NOT NULL,
+    "consumables" TEXT,
+    "name" TEXT,
+    "cargo_capacity" TEXT,
+    "passengers" TEXT,
+    "max_atmosphering_speed" TEXT,
+    "crew" TEXT,
+    "length" TEXT,
+    "model" TEXT,
+    "cost_in_credits" TEXT,
+    "manufacturer" TEXT,
+    "mglt" TEXT,
+    "starship_class" TEXT,
+    "hyperdrive_rating" TEXT,
+    "url" TEXT
+);
+
+CREATE TABLE "vehicles" (
+    "_id" TEXT PRIMARY KEY,
+    "description" TEXT,
+    "created" TEXT NOT NULL,
+    "edited" TEXT NOT NULL,
+    "consumables" TEXT,
+    "name" TEXT,
+    "cargo_capacity" TEXT,
+    "passengers" TEXT,
+    "max_atmosphering_speed" TEXT,
+    "crew" TEXT,
+    "length" TEXT,
+    "model" TEXT,
+    "cost_in_credits" TEXT,
+    "manufacturer" TEXT,
+    "vehicle_class" TEXT,
+    "url" TEXT
+);
 ```
 
-## Requisitos Previos
-
-- .NET 8.0 SDK
-- Visual Studio 2022 o Visual Studio Code
-- SQL Server (opcional, por defecto usa SQLite)
-
-## Instalación
-
-1. Clonar el repositorio:
-```powershell
-git clone [url-del-repositorio]
-cd StarWarsApi
-```
-
-2. Restaurar las dependencias:
-```powershell
-dotnet restore
-```
-
-3. Actualizar la base de datos:
-```powershell
-dotnet ef database update
-```
-
-## Configuración
-
-La configuración de la aplicación se encuentra en `appsettings.json`. Puedes modificar:
-
-- Conexión a la base de datos
-- URL base de SWAPI
-- Otros parámetros de configuración
-
-## Ejecución
-
-1. Para ejecutar la aplicación:
-```powershell
-dotnet run
-```
-
-2. La API estará disponible en:
-- https://localhost:7272 (HTTPS)
-- http://localhost:5272 (HTTP)
-
-## Endpoints Disponibles
-
-- `GET /api/character/GetCharacters` - Obtener todos los personajes desde SWAPI
-- `POST /api/character/SaveCharacter` - Añadir un personaje de la api a la base de datos
-- `DELETE /api/character/deleteCharacter/{id}` - Eliminar un personaje de la base de datos local
-
-Similar para:
-- `/api/film`
-- `/api/planet`
-- `/api/specie`
-- `/api/starship`
-- `/api/vehicle`
+---
 
 ## Testing
 
-Para ejecutar los tests:
+Para ejecutar los tests (ubicados en el proyecto `StarWarsApi.Tests`):
+
 ```powershell
-dotnet test
+dotnet test StarWarsApi.Tests/StarWarsApi.Tests.csproj
 ```
 
-Los tests incluyen:
-- Tests unitarios con mocking
-- Tests de integración con la API real
-- Tests de la capa de persistencia
+---
+
+## Notas
+- La base de datos utilizada es SQLite y se crea automáticamente con las migraciones de Entity Framework.
+- Puedes modificar la cadena de conexión en `StarWarsApi/appsettings.json`.
+- Para más detalles sobre los endpoints, revisa los controllers y sus anotaciones en la carpeta `StarWarsApi/Controllers`.
