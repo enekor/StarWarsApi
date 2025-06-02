@@ -180,3 +180,4 @@ dotnet test StarWarsApi.Tests/StarWarsApi.Tests.csproj
 - La base de datos utilizada es SQLite y se crea automáticamente con las migraciones de Entity Framework.
 - Puedes modificar la cadena de conexión en `StarWarsApi/appsettings.json`.
 - Para más detalles sobre los endpoints, revisa los controllers y sus anotaciones en la carpeta `StarWarsApi/Controllers`.
+- Al iniciar la API, se abre automáticamente una interfaz Swagger en tu navegador donde puedes explorar y probar todos los endpoints de forma interactiva.
