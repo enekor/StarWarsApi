@@ -1,6 +1,6 @@
 # SWConsoleApp
 
-Consola para interactuar con los endpoints de FilmController de StarWarsApi.
+Consola para interactuar con los endpoints de FilmController de SWConsoleApp
 
 ## Funcionalidad principal
 - Obtener todas las películas desde `/Film/GetFilms` y cargarlas en memoria.

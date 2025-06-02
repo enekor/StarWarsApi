@@ -3,36 +3,51 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using SWConsoleApp.Models;
 
 namespace SWConsoleApp
 {
-    public class FilmDto
-    {
-        public string? Description { get; set; }
-        public DateTime Created { get; set; }
-        public DateTime Edited { get; set; }
-        public List<string>? Starships { get; set; }
-        public List<string>? Vehicles { get; set; }
-        public List<string>? Planets { get; set; }
-        public string? Producer { get; set; }
-        public string? Title { get; set; }
-        public int EpisodeId { get; set; }
-        public string? Director { get; set; }
-        public string? ReleaseDate { get; set; }
-        public string? OpeningCrawl { get; set; }
-        public List<string>? Characters { get; set; }
-        public List<string>? Species { get; set; }
-        public string? Url { get; set; }
-    }
 
     class Program
     {
-        static readonly string apiBase = "http://localhost:5000/Film"; // Cambia el puerto si es necesario
-        static List<FilmDto> films = new();
+        static readonly string apiBase = "https://localhost:7079/Film"; // Cambia a http://localhost:5212/Film si usas HTTP
+        static List<FilmsDto> films = new();
+        static Random random = new();
+        static readonly string[] loadingMessages = new[]
+        {
+            "Reparando espadas láser...",
+            "Apuntando a las estrellas...",
+            "Acariciando a Chewbacca...",
+            "Cargando midiclorianos...",
+            "Despertando a R2-D2...",
+            "Convocando a la Fuerza...",
+            "Evitando el lado oscuro...",
+            "Saltando al hiperespacio..."
+        };
 
         static async Task Main(string[] args)
         {
-            await LoadFilms();
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("¿Desde dónde quieres ver las películas?");
+                Console.WriteLine("[1] SWApi (API externa)");
+                Console.WriteLine("[2] Base de datos local");
+                Console.WriteLine("[0] Salir");
+                Console.Write("Selecciona una opción: ");
+                var opt = Console.ReadLine();
+                if (opt == "0") return;
+                if (opt == "1")
+                {
+                    await LoadFilms(fromApi: true);
+                    break;
+                }
+                if (opt == "2")
+                {
+                    await LoadFilms(fromApi: false);
+                    break;
+                }
+            }
             if (films.Count == 0)
             {
                 Console.WriteLine("No se encontraron películas.");
@@ -53,15 +68,17 @@ namespace SWConsoleApp
             }
         }
 
-        static async Task LoadFilms()
+        static async Task LoadFilms(bool fromApi)
         {
             using var client = new HttpClient();
             try
             {
-                var resp = await client.GetAsync($"{apiBase}/GetFilms");
+                ShowLoading();
+                string endpoint = fromApi ? $"{apiBase}/GetFilms" : $"{apiBase}/GetFilmsFromDatabase";
+                var resp = await client.GetAsync(endpoint);
                 resp.EnsureSuccessStatusCode();
                 var json = await resp.Content.ReadAsStringAsync();
-                films = JsonConvert.DeserializeObject<List<FilmDto>>(json) ?? new();
+                films = JsonConvert.DeserializeObject<List<FilmsDto>>(json) ?? new();
             }
             catch (Exception ex)
             {
@@ -69,7 +86,13 @@ namespace SWConsoleApp
             }
         }
 
-        static void ShowFilmMenu(FilmDto film)
+        static void ShowLoading()
+        {
+            var msg = loadingMessages[random.Next(loadingMessages.Length)];
+            Console.WriteLine($"\n{msg}\n");
+        }
+
+        static void ShowFilmMenu(FilmsDto film)
         {
             while (true)
             {
@@ -95,11 +118,11 @@ namespace SWConsoleApp
                 if (opt == "0") break;
                 switch (opt)
                 {
-                    case "1": ShowList("Personajes", film.Characters); break;
-                    case "2": ShowList("Vehículos", film.Vehicles); break;
-                    case "3": ShowList("Planetas", film.Planets); break;
-                    case "4": ShowList("Especies", film.Species); break;
-                    case "5": ShowList("Starships", film.Starships); break;
+                    case "1": ShowList("Personajes", film.Characters?.Where(v => v?.Name != null).Select(v => v!.Name!).ToList() ?? new List<string>()); break;
+                    case "2": ShowList("Vehículos", film.Vehicles?.Where(v => v?.Name != null).Select(v => v!.Name!).ToList() ?? new List<string>()); break;
+                    case "3": ShowList("Planetas", film.Planets?.Where(v => v?.Name != null).Select(v => v!.Name!).ToList() ?? new List<string>()); break;
+                    case "4": ShowList("Especies", film.Species?.Where(v => v?.Name != null).Select(v => v!.Name!).ToList() ?? new List<string>()); break;
+                    case "5": ShowList("Starships", film.Starships?.Where(v => v?.Name != null).Select(v => v!.Name!).ToList() ?? new List<string>()); break;
                     case "6": SaveFilm(film).Wait(); break;
                 }
                 Console.WriteLine("Presione una tecla para continuar...");
@@ -117,7 +140,7 @@ namespace SWConsoleApp
                     Console.WriteLine("- " + item);
         }
 
-        static async Task SaveFilm(FilmDto film)
+        static async Task SaveFilm(FilmsDto film)
         {
             using var client = new HttpClient();
             try
